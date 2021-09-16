@@ -12,13 +12,7 @@ from Environment.bounds import Bounds
 
 class Benchmark_function():
     def __init__(self, e, grid, resolution, xs, ys, w_ostacles=False, obstacles_on=False, randomize_shekel=False, sensor="",
-                 no_maxima=10, load_from_db=False, file=0, a=None, c=None, bench=None):
-        if c is None:
-            self.c = []
-        if a is None:
-            self.a = []
-        if bench is None:
-            self.bench = list()
+                 no_maxima=10, load_from_db=False, file=0):
         self.w_obstacles = w_ostacles
         self.e = e
         self.grid = grid
@@ -29,10 +23,10 @@ class Benchmark_function():
         self.no_maxima = no_maxima
         self.load_from_db = load_from_db
         self.file = file
-        self.a = a
-        self.c = c
         self.xs = xs
         self.ys = ys
+        self.a = []
+        self.c = []
         return
 
     def bohachevsky_arg0(self, sol):
@@ -56,7 +50,7 @@ class Benchmark_function():
     def schwefel_arg0(self, sol):
         return np.nan if self.w_obstacles and sol[2] == 1 else benchmarks.schwefel(sol[:2])[0]
 
-    def create_map(self):
+    def create_map(self, n):
         if self.load_from_db:
             if self.sensor == "s1":
                 file = 0
@@ -115,19 +109,20 @@ class Benchmark_function():
             map_created = (map_created - meanz) / stdz
 
             with open('C:/Users/mcjara/OneDrive - Universidad Loyola '
-                      'Andalucía/Documentos/PycharmProjects/EGPPSO_ASV/Data/shww1.npy', 'wb') as g:
+                      'Andalucía/Documentos/PycharmProjects/PSODRL/GroundTruth/shww' + str(n) + '.npy', 'wb') as g:
                 np.save(g, map_created)
 
             return map_created
 
-    def benchmark_total(self):
-        df_bounds_or, grid_or, X_test_or = Bounds(self.resolution, self.xs, self.ys).map_bound()
-        _z = Benchmark_function(self.e, self.grid, self.resolution, self.xs, self.ys).create_map()
+    def benchmark_total(self, n):
+        bench = list()
+        df_bounds_or, X_test_or = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
+        _z = Benchmark_function(self.e, self.grid, self.resolution, self.xs, self.ys).create_map(n)
         for i in range(len(X_test_or)):
-            self.bench.append(_z[X_test_or[i][0], X_test_or[i][1]])
+            bench.append(_z[X_test_or[i][0], X_test_or[i][1]])
 
-        bench_function_or = np.array(self.bench)
+        bench_function_or = np.array(bench)
 
         secure_grid, X_test, df_bounds = Bounds(self.resolution, self.xs, self.ys).interest_area()
 
-        return bench_function_or, X_test_or, secure_grid, df_bounds, grid_or
+        return bench_function_or, X_test_or, secure_grid, df_bounds

@@ -4,8 +4,7 @@ from Data.data_path import map_path
 
 
 class Map():
-    def __init__(self, resolution, xs, ys):
-        self.resolution = resolution
+    def __init__(self, xs, ys):
         self.xs = xs
         self.ys = ys
         return
@@ -34,8 +33,7 @@ class Map():
                 array[i, j] = int(bit)
                 i += 1
             j += 1
-        resolution = self.resolution
-        return array, resolution
+        return array
 
     def map_values(self):
         grid_max_x = self.xs

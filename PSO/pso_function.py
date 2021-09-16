@@ -1,6 +1,6 @@
-import numpy as np
-from sys import path
+from Data.utils import Utils
 from Data.limits import Limits
+from GaussianProcess.gaussianp import Gaussian_Process
 import numpy as np
 import random
 import math
@@ -28,11 +28,9 @@ class PSO:
         self.X_test = X_test
         self.bench_function = bench_function
         self.df_bounds = df_bounds
-
-
         return
 
-    def initPSO(self):
+    def createPart(self):
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
         creator.create("Particle", np.ndarray, fitness=creator.FitnessMax, speed=None, smin=None, smax=None,
                        best=None)
@@ -66,23 +64,45 @@ class PSO:
 
     def tool_n(self):
         toolbox = base.Toolbox()
-        gen = PSO(self.GEN, self.grid_min, self.grid_max, self.secure, self.xs, self.ys, self.X_test, self.bench_function).generatePart
-        toolbox.register("particle", gen)
+        gen = PSO(self.GEN, self.grid_min, self.grid_max, self.secure, self.xs, self.ys, self.X_test, self.bench_function, self.df_bounds)
+        toolbox.register("particle", gen.generatePart)
         toolbox.register("population", tools.initRepeat, list, toolbox.particle)
-        toolbox.register("update",
-                         PSO(self.GEN, self.grid_min, self.grid_max, self.secure, self.xs, self.ys, self.X_test, self.bench_function).updateParticle_n)
+        toolbox.register("update", gen.updateParticle_n)
         return toolbox
 
     def swarm(self):
-        pop = PSO(self.GEN, self.grid_min, self.grid_max, self.secure, self.xs, self.ys, self.X_test, self.bench_function).tool_n().population(
+        pop = PSO(self.GEN, self.grid_min, self.grid_max, self.secure, self.xs, self.ys, self.X_test, self.bench_function, self.df_bounds).tool_n().population(
             n=self.population)
         best = pop[0]
         return pop, best
 
-    def pso_fitness(self, g, s_n, n_data, part_ant, s_ant, part, ok, x_h, y_h, fitness, x_p, y_p, y_data, init, grid_min, x_g, y_g, n, n_plot, best):
+    def statistic(self):
+        stats = tools.Statistics(lambda ind: ind.fitness.values)
+        stats.register("avg", np.mean)
+        stats.register("std", np.std)
+        stats.register("min", np.min)
+        stats.register("max", np.max)
 
-        part, s_n = Limits(g, part, s_n, self.secure, self.xs, self.ys, n_data, part_ant, s_ant,
-                           file=0).new_limit()
+        logbook = tools.Logbook()
+        logbook.header = ["gen", "evals"] + stats.fields
+        return stats, logbook
+
+    def initPSO(self, seed):
+        pso = PSO(self.GEN, self.grid_min, self.grid_max, self.secure, self.xs, self.ys, self.X_test, self.bench_function, self.df_bounds)
+        pso.createPart()
+        pso.generatePart()
+        toolbox = pso.tool_n()
+        random.seed(seed[0])
+        pop, best = pso.swarm()
+        stats, logbook = pso.statistic()
+        return toolbox, pop, best, stats, logbook
+
+    def pso_fitness(self, g, s_n, n_data, part_ant, s_ant, part, ok, x_h, y_h, fitness, x_p, y_p, y_data, grid_min, x_g, y_g, n, n_plot, best, init=False):
+
+        def __ini__():
+
+
+        part, s_n = Limits(self.secure, self.xs, self.ys).new_limit(g, part, s_n, n_data, s_ant, part_ant)
         x_bench = int(part[0])
         y_bench = int(part[1])
 
@@ -126,3 +146,98 @@ class PSO:
                 best.fitness.values = part.fitness.values
 
         return ok, x_h, y_h, fitness, x_p, y_p, y_data, x_bench, y_bench, part, best, n_plot, s_n
+
+    def step(self, method, dist_ant, gpr, pso, c1, c2, c3, c4, lam, k, pop, g, s_ant, x_g, y_g, n, last_sample, post_array, samples,
+             MSE_data, it, toolbox, stats, logbook, s_n, n_data, part_ant, ok, x_h, y_h, fitness, x_p, y_p, y_data,
+             n_plot, best, distances, mu_data, sigma_data, sigma, mu, sigma_best, mu_best):
+        dis_steps = 0
+        while dis_steps < 10:
+            for part in pop:
+                ok, x_h, y_h, fitness, x_p, y_p, y_data, x_bench, y_bench, part, best, n_plot, s_n = pso.pso_fitness(g,
+                                                                                                                     s_n,
+                                                                                                                     n_data,
+                                                                                                                     part_ant,
+                                                                                                                     s_ant,
+                                                                                                                     part,
+                                                                                                                     ok,
+                                                                                                                     x_h,
+                                                                                                                     y_h,
+                                                                                                                     fitness,
+                                                                                                                     x_p,
+                                                                                                                     y_p,
+                                                                                                                     y_data,
+                                                                                                                     self.grid_min,
+                                                                                                                     x_g,
+                                                                                                                     y_g,
+                                                                                                                     n,
+                                                                                                                     n_plot,
+                                                                                                                     best,
+                                                                                                                     init=False)
+                part_ant, distances = Utils().distance_part(g, n_data, part, part_ant, distances, init=True)
+
+                n_data += 1
+                if n_data > 4:
+                    n_data = 1
+
+            if (np.mean(distances) - last_sample) >= (np.min(post_array) * lam):
+                c3 = c3
+                c4 = c4
+                k += 1
+                ok = True
+                last_sample = np.mean(distances)
+
+                for part in pop:
+                    ok, x_h, y_h, fitness, x_p, y_p, y_data, x_bench, y_bench, part, best, n_plot, s_n = pso.pso_fitness(g,
+                                                                                                                     s_n,
+                                                                                                                     n_data,
+                                                                                                                     part_ant,
+                                                                                                                     s_ant,
+                                                                                                                     part,
+                                                                                                                     ok,
+                                                                                                                     x_h,
+                                                                                                                     y_h,
+                                                                                                                     fitness,
+                                                                                                                     x_p,
+                                                                                                                     y_p,
+                                                                                                                     y_data,
+                                                                                                                     self.grid_min,
+                                                                                                                     x_g,
+                                                                                                                     y_g,
+                                                                                                                     n,
+                                                                                                                     n_plot,
+                                                                                                                     best,
+                                                                                                                     init=False)
+
+                    sigma, mu, sigma_data, mu_data, post_array = gpr.gp_regression(int(part[0]), int(part[1]), x_h, y_h,
+                                                                                   fitness, post_array, n_data, mu_data,
+                                                                                   sigma_data)
+
+                    samples += 1
+
+                    n_data += 1
+                    if n_data > 4:
+                        n_data = 1
+
+                MSE_data, it = Utils().mse(g, fitness, mu_data, samples, MSE_data, it)
+
+                sigma_best, mu_best = gpr.sigma_max(sigma, mu)
+                ok = False
+
+            for part in pop:
+                # toolbox.update(part, best, sigma_best, mu_best, g, GEN, c1, c2, c3, c4)
+                toolbox.update(g, c1, c2, c3, c4, part, best, sigma_best, mu_best)
+
+            logbook.record(gen=g, evals=len(pop), **stats.compile(pop))
+            print(logbook.stream)
+            mean_dist = np.mean(np.array(distances))
+            print(mean_dist)
+            dis_steps = np.mean(distances) - dist_ant
+            dist_ant = np.mean(distances)
+
+        # if method == 0:
+        #     out = [np.append] # vector escalar
+        # elif method == 1:
+        #     out = [plot] # image
+        return lam, k, g, s_ant, x_g, y_g, n, last_sample, post_array, samples, MSE_data, it, s_n, n_data, part_ant, \
+               ok, x_h, y_h, fitness, x_p, y_p, y_data, n_plot, best, distances, mu_data, sigma_data, sigma, mu, sigma_best, mu_best, dist_ant
+

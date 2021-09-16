@@ -44,7 +44,7 @@ class Limits:
         return part
 
     def new_limit(self, g, part, s_n, n_data, s_ant, part_ant):
-        with open(path[-1] + '/Data/bounds.npy'.format(self.file), 'rb') as bn:
+        with open(path[-1] + '/GroundTruth/bounds.npy'.format(self.file), 'rb') as bn:
             df_bounds = np.load(bn)
         x_int = int(part[0])
         y_int = int(part[1])
@@ -82,7 +82,7 @@ class Limits:
             limit = Limits(self.secure, self.xs, self.ys)
             if n_data == 1.0:
                 if s_ant[0] > 1 and s_1:
-                    part = limit.ratio_s(x_int, y_int, part)
+                    part = limit.ratio_s(part_ant[g, 0], part_ant[g, 1], part)
                     s_1 = False
                 else:
                     if part[0] <= bn[0, 0]:
@@ -92,7 +92,7 @@ class Limits:
                 s_ant[0] = s
             elif n_data == 2.0:
                 if s_ant[1] > 1 and s_2:
-                    part = limit.ratio_s(x_int, y_int, part)
+                    part = limit.ratio_s(part_ant[g, 2], part_ant[g, 3], part)
                     s_2 = False
                 else:
                     if part[0] <= bn[0, 0]:
@@ -102,7 +102,7 @@ class Limits:
                 s_ant[1] = s
             elif n_data == 3.0:
                 if s_ant[2] > 1 and s_3:
-                    part = limit.ratio_s(x_int, y_int, part)
+                    part = limit.ratio_s(part_ant[g, 4], part_ant[g, 5], part)
                     s_3 = False
                 else:
                     if part[0] <= bn[0, 0]:
@@ -112,7 +112,7 @@ class Limits:
                 s_ant[2] = s
             elif n_data == 4.0:
                 if s_ant[3] > 1 and s_4:
-                    part = limit.ratio_s(x_int, y_int, part)
+                    part = limit.ratio_s(part_ant[g, 6], part_ant[g, 7], part)
                     s_4 = False
 
                 else:
@@ -126,7 +126,7 @@ class Limits:
 
 
 
-    def Z_var_mean(mu, sigma, X_test, grid):
+    def Z_var_mean(self, mu, sigma, X_test, grid):
         Z_var = np.zeros([grid.shape[0], grid.shape[1]])
         Z_mean = np.zeros([grid.shape[0], grid.shape[1]])
         for i in range(len(X_test)):
