@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as ticker
 
+
 class Plots():
     def __init__(self, xs, ys, X_test, grid, bench_function, grid_min):
         self.xs = xs
@@ -39,17 +40,6 @@ class Plots():
         ax1.set_ylabel("Fitness")
         ax1.legend(["Min", "Max", "Avg"])
         plt.grid(True)
-
-
-    def movimiento(self, x_a, y_a):
-        plt.figure(2)
-        plt.scatter(x_a, y_a)
-        plt.xlabel("X")
-        plt.ylabel("Y")
-        plt.grid(True)
-        plt.title("Movimiento de las partículas")
-        plt.show()
-        plt.close()
 
     def bench_plot(self):
         plot = np.zeros([self.xs, self.ys])
