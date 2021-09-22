@@ -1,4 +1,5 @@
 from Data.limits import Limits
+from Environment.plot import Plots
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
@@ -36,6 +37,7 @@ class PSO_fun:
         self.df_bounds = df_bounds
         ker = RBF(length_scale=0.7, length_scale_bounds=(1e-1, 10))
         self.gpr = GaussianProcessRegressor(kernel=ker, alpha=1 ** 2)
+        self.plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
         if n_data == 0:
             self.x_h = list()
             self.y_h = list()
@@ -274,7 +276,7 @@ class PSO_fun:
 
         return sigma_best, mu_best
 
-    def initcode(self, pop, pso, util, gpr, toolbox, g, c1, c2, c3, c4, lam, best, post_array, method, part_ant,
+    def initcode(self, pop, pso, util, toolbox, g, c1, c2, c3, c4, lam, best, post_array, method, part_ant,
                  distances):
 
         """
@@ -359,7 +361,7 @@ class PSO_fun:
 
                 MSE_data, it = util.mse(g, self.fitness, self.mu_data, samples)
 
-                sigma_best, mu_best = gpr.sigma_max(sigma, mu)
+                sigma_best, mu_best = pso.sigma_max(sigma, mu)
 
             z = 0
 
@@ -384,7 +386,12 @@ class PSO_fun:
                             out[0, 21] = mu_best[1]
                     else:
                         out = np.zeros((self.GEN, 6))
-
+                        out[z] = self.plot.part_position(part_ant[:, 2 * z], part_ant[:, 2 * z + 1])
+                        z += 1
+                        if n_data == 4:
+                            z_un, z_mean = self.plot.Z_var_mean(mu, sigma)
+                            out[4] = z_un
+                            out[5] = z_mean
                     n_data += 1
                     if n_data > 4:
                         n_data = 1
@@ -395,12 +402,38 @@ class PSO_fun:
 
         return out, sigma_best, mu_best, post_array, last_sample, MSE_data, it, g, k, samples
 
-    def step(self, ok, pop, pso, util, gpr, toolbox, out, g, c1, c2, c3, c4, lam, best, post_array, last_sample, method,
+    def step(self, ok, pop, pso, util, toolbox, out, g, c1, c2, c3, c4, lam, best, post_array, last_sample, method,
              sigma_best, mu_best, part_ant, distances, k, f, samples, MSE_data, it):
 
         """
         The output "out" of the method "step" is the positions of the particles (drones) after traveling 1000 m
         (scaled).
+
+        method = 0 -> out = scalar vector
+        out = [px_1, py_1, px_2, py_2, px_3, py_3, px_4, py_4, lbx_1, lby_1, lbx_2, lby_2, lbx_3, lby_3, lbx_4, lby_4,
+               gbx, gby, sbx, sgy, mbx, mby]
+               where:
+               px: x coordinate of the drone position
+               py: y coordinate of the drone position
+               lbx: x coordinate of the local best
+               lby: y coordinate of the local best
+               gbx: x coordinate of the global best
+               gby: y coordinate of the global best
+               sbx: x coordinate of the sigma best (maximum uncertainty)
+               sby: y coordinate of the sigma best (maximum uncertainty)
+               mbx: x coordinate of the mean best (maximum contamination)
+               mby: y coordinate of the mean best (maximum contamination)
+
+        method = 1 -> out = images
+
+        :param c1: weight that determinate the importance of the local best component
+        :param c2: weight that determinate the importance of the global best component
+        :param c3: weight that determinate the importance of the maximum uncertainty component
+        :param c4: weight that determinate the importance of the maximum contamination component
+        :param lam: ratio of one of the different length scales [Equation 7
+        (https://doi.org/10.3390/electronics10131605)]
+        :param post_array: refers to the posterior length scale of the surrogate model [Equation 7
+        (https://doi.org/10.3390/electronics10131605)]
         """
 
         dis_steps = 0
@@ -439,7 +472,7 @@ class PSO_fun:
 
                 MSE_data, it = util.mse(g, self.fitness, self.mu_data, samples)
 
-                sigma_best, mu_best = gpr.sigma_max(sigma, mu)
+                sigma_best, mu_best = pso.sigma_max(sigma, mu)
                 ok = False
 
             for part in pop:
@@ -469,7 +502,12 @@ class PSO_fun:
                         out[f, 20] = mu_best[0]
                         out[f, 21] = mu_best[1]
                 else:
-                    out = out
+                    out[z] = self.plot.part_position(part_ant[:, 2 * z], part_ant[:, 2 * z + 1])
+                    z += 1
+                    if n_data == 4:
+                        z_un, z_mean = self.plot.Z_var_mean(mu, sigma)
+                        out[4] = z_un
+                        out[5] = z_mean
 
                 n_data += 1
                 if n_data > 4:

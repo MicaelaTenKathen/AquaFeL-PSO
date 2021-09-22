@@ -3,7 +3,6 @@ from Environment.map import Map
 from Environment.plot import Plots
 import time
 from PSO.pso_function import PSO_fun
-from GaussianProcess.gaussianp import Gaussian_Process
 import numpy as np
 from Data.utils import Utils
 from sys import path
@@ -69,17 +68,16 @@ start_time = time.time()
 pso = PSO_fun(n_data, GEN, grid_min, grid_max, secure, xs, ys, X_test, bench_function, df_bounds)
 best, pop, toolbox, stats, logbook = pso.initPSO(seed, n_data)
 util = Utils()
-method = 0
+method = 1
 
 # Gaussian process initialization
 
-gpr = Gaussian_Process(X_test)
 
 # First iteration of PSO
 
 n_data += 1
 
-out, sigma_best, mu_best, post_array, last_sample, MSE_data, it, g, k, samples = pso.initcode(pop, pso, util, gpr,
+out, sigma_best, mu_best, post_array, last_sample, MSE_data, it, g, k, samples = pso.initcode(pop, pso, util,
                                                                                               toolbox,
                                                                                               g, c1, c2, c3, c4, lam,
                                                                                               best, post_array, method,
@@ -95,7 +93,7 @@ while g < GEN:
     g_ant = g
 
     out, sigma_best, mu_best, post_array, last_sample, MSE_data, it, g, k, f, samples, mu, sigma = pso.step(ok, pop, pso, util,
-                                                                                                 gpr, toolbox, out, g,
+                                                                                                 toolbox, out, g,
                                                                                                  c1, c2, c3, c4, lam,
                                                                                                  best, post_array,
                                                                                                  last_sample, method,
