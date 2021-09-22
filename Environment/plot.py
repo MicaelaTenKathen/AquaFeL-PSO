@@ -13,6 +13,7 @@ class Plots():
 
     def Z_var_mean(self, mu, sigma):
         Z_var = np.zeros([self.grid.shape[0], self.grid.shape[1]])
+        print(np.array(mu).shape)
         Z_mean = np.zeros([self.grid.shape[0], self.grid.shape[1]])
         for i in range(len(self.X_test)):
             Z_var[self.X_test[i][0], self.X_test[i][1]] = sigma[i]

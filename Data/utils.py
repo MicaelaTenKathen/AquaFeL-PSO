@@ -4,8 +4,17 @@ import openpyxl
 
 
 class Utils:
-    def distance_part(self, g, n_data, part, part_ant, distances, init=False):
-        if init:
+    def __init__(self):
+        self.MSE_data = list()
+        self.it = list()
+
+    def distance_part(self, g, n_data, part, part_ant, distances, dfirst=False):
+
+        """
+        Calculates the distance between (x,y)^t and (x,y)^(t-1).
+        """
+
+        if dfirst:
             if n_data == 1:
                 part_ant[0, 0] = part[0]
                 part_ant[0, 1] = part[1]
@@ -46,24 +55,34 @@ class Utils:
 
         return part_ant, distances
 
-    def mse(self, g, y_data, mu_data, samples, MSE_data, it):
+    def mse(self, g, y_data, mu_data, samples):
+
+        """
+        Calculates the mean square error (MSE) between the collected data and the estimated data.
+        """
+
         total_suma = 0
         y_array = np.array(y_data)
         mu_array = np.array(mu_data)
         for i in range(len(mu_array)):
             total_suma = (float(y_array[i]) - float(mu_array[i])) ** 2 + total_suma
         MSE = total_suma / samples
-        MSE_data.append(MSE)
-        it.append(g)
-        return MSE_data, it
+        self.MSE_data.append(MSE)
+        self.it.append(g)
+        return self.MSE_data, self.it
 
-    def savexlsx(self, MSE_data, sigma_data, mu_data, distances, it, seed):
+    def savexlsx(self, sigma_data, mu_data, seed):
+
+        """
+        Save the data in excel documents.
+        """
+
         for i in range(len(mu_data)):
             mu_data[i] = float(mu_data[i])
 
         wb1 = openpyxl.Workbook()
         hoja1 = wb1.active
-        hoja1.append(MSE_data)
+        hoja1.append(self.MSE_data)
         wb1.save('Pruebas/Error' + str(seed[0]) + '.xlsx')
 
         wb2 = openpyxl.Workbook()
@@ -78,10 +97,10 @@ class Utils:
 
         wb4 = openpyxl.Workbook()
         hoja4 = wb4.active
-        hoja4.append(list(distances))
+        hoja4.append(list(self.distances))
         wb4.save('Pruebas/Distance' + str(seed[0]) + '.xlsx')
 
         wb5 = openpyxl.Workbook()
         hoja5 = wb5.active
-        hoja5.append(it)
+        hoja5.append(self.it)
         wb5.save('Pruebas/Data' + str(seed[0]) + '.xlsx')

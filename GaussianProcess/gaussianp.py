@@ -1,6 +1,7 @@
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 import numpy as np
+from PSO.pso_function import PSO_fun
 
 
 class Gaussian_Process:
@@ -10,9 +11,10 @@ class Gaussian_Process:
         ker = RBF(length_scale=0.7, length_scale_bounds=(1e-1, 10))
         self.gpr = GaussianProcessRegressor(kernel=ker, alpha=1 ** 2)
 
-    def gp_regression(self, x_bench, y_bench, x_h, y_h, fitness, post_array, n_data, mu_data, sigma_data):
-        x_a = np.array(x_h).reshape(-1, 1)
-        y_a = np.array(y_h).reshape(-1, 1)
+    def gp_regression(self, x_bench, y_bench, fitness, post_array, n_data, mu_data, sigma_data, GEN, grid_min, grid_max, secure, xs, ys, bench_function, df_bounds):
+        PSO_fun.__init__(self, GEN, grid_min, grid_max, secure, xs, ys, self.X_test, bench_function, df_bounds)
+        x_a = np.array(self.x_h).reshape(-1, 1)
+        y_a = np.array(self.y_h).reshape(-1, 1)
         x_train = np.concatenate([x_a, y_a], axis=1).reshape(-1, 2)
         y_train = np.array(fitness).reshape(-1, 1)
 
