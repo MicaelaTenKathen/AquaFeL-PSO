@@ -386,7 +386,9 @@ class PSO_fun:
                             out[0, 21] = mu_best[1]
                     else:
                         out = np.zeros((self.GEN, 6))
-                        out[z] = self.plot.part_position(part_ant[:, 2 * z], part_ant[:, 2 * z + 1])
+                        posx = 2 * z
+                        posy = (2 * z) + 1
+                        out[z] = self.plot.part_position(part_ant[:, posx], part_ant[:, posy], n_data)
                         z += 1
                         if n_data == 4:
                             z_un, z_mean = self.plot.Z_var_mean(mu, sigma)
@@ -502,7 +504,9 @@ class PSO_fun:
                         out[f, 20] = mu_best[0]
                         out[f, 21] = mu_best[1]
                 else:
-                    out[z] = self.plot.part_position(part_ant[:, 2 * z], part_ant[:, 2 * z + 1])
+                    posx = 2 * z
+                    posy = (2 * z) + 1
+                    out[z] = self.plot.part_position(part_ant[:, posx], part_ant[:, posy], n_data)
                     z += 1
                     if n_data == 4:
                         z_un, z_mean = self.plot.Z_var_mean(mu, sigma)

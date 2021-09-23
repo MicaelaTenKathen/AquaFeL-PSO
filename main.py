@@ -54,7 +54,7 @@ bench_function, X_test, secure, df_bounds = ben.benchmark_total(n)
 
 seed = [20]  # , 95, 541, 65, 145, 156, 158, 12, 3, 89, 57, 123, 456, 789, 987, 654, 321, 147, 258, 369, 741, 852,
 # 963, 159, 951, 753, 357, 756, 8462, 4875]
-c1, c2, c30, c40, c3, c4, length_scale, lam = 3.1286, 2.568, 0, 0, 0.79, 0, 1, 0.1
+c1, c2, c30, c40, c3, c4, length_scale, lam = 3.1286, 2.568, 0, 0, 0.79, 0, 1, 1
 n_data = 0
 g = 0
 benchmark_data, sigma, mu = list(), list(), list()
