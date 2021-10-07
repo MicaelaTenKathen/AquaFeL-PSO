@@ -27,6 +27,7 @@ class Benchmark_function():
         self.ys = ys
         self.a = []
         self.c = []
+        self.bench = list()
         return
 
     def bohachevsky_arg0(self, sol):
@@ -108,21 +109,14 @@ class Benchmark_function():
             stdz = np.nanstd(map_created)
             map_created = (map_created - meanz) / stdz
 
-            with open('C:/Users/mcjara/OneDrive - Universidad Loyola '
-                      'Andalucía/Documentos/PycharmProjects/PSODRL/GroundTruth/shww' + str(n) + '.npy', 'wb') as g:
+            with open('./GroundTruth/shww' + str(n) + '.npy', 'wb') as g:
                 np.save(g, map_created)
 
-            return map_created
+            df_bounds, X_test_or = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
 
-    def benchmark_total(self, n):
-        bench = list()
-        df_bounds_or, X_test_or = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
-        _z = Benchmark_function(self.e, self.grid, self.resolution, self.xs, self.ys).create_map(n)
-        for i in range(len(X_test_or)):
-            bench.append(_z[X_test_or[i][0], X_test_or[i][1]])
+            for i in range(len(X_test_or)):
+                self.bench.append(map_created[X_test_or[i][0], X_test_or[i][1]])
 
-        bench_function_or = np.array(bench)
+            bench_function_or = np.array(self.bench) # Return solo esto de benchmark function
 
-        secure_grid, X_test, df_bounds = Bounds(self.resolution, self.xs, self.ys).interest_area()
-
-        return bench_function_or, X_test_or, secure_grid, df_bounds
+            return bench_function_or

@@ -2,7 +2,6 @@ from Environment.map import Map
 from Data.data_path import bounds_path, grid_path, available_path, secure_path, se_available_path
 import pandas as pd
 import numpy as np
-from sys import path
 
 
 class Bounds():
@@ -17,16 +16,16 @@ class Bounds():
 
     def map_bound(self):
         if self.load_file:
-            with open(path[-1] + '/GroundTruth/bounds.npy'.format(self.file), 'rb') as bn:
+            with open('./GroundTruth/bounds.npy'.format(self.file), 'rb') as bn:
                 df_bounds = np.load(bn)
 
-            with open(path[-1] + '/GroundTruth/grid.npy'.format(self.file), 'rb') as gd:
+            with open('./GroundTruth/grid.npy'.format(self.file), 'rb') as gd:
                 grid = np.load(gd)
 
-            with open(path[-1] + '/GroundTruth/available.npy'.format(self.file), 'rb') as av:
+            with open('./GroundTruth/available.npy'.format(self.file), 'rb') as av:
                 available = np.load(av)
 
-            return df_bounds, grid, available
+            return df_bounds, available
 
         else:
             available, first, last, y_first, y_last = list(), list(), list(), list(), list()
@@ -110,10 +109,10 @@ class Bounds():
 
     def interest_area(self):
         if self.load_file:
-            with open(path[-1] + '/GroundTruth/secure_grid.npy'.format(self.file), 'rb') as sg:
+            with open('./GroundTruth/secure_grid.npy'.format(self.file), 'rb') as sg:
                 secure_grid = np.load(sg)
 
-            with open(path[-1] + '/GroundTruth/secure_av.npy'.format(self.file), 'rb') as sa:
+            with open('./GroundTruth/secure_av.npy'.format(self.file), 'rb') as sa:
                 se_available = np.load(sa)
             return secure_grid, se_available
         else:
@@ -162,4 +161,4 @@ class Bounds():
             with open(seap, 'wb') as sa:
                 np.save(sa, se_available)
 
-            return secure_grid, se_available, df_bounds
+            return secure_grid, df_bounds

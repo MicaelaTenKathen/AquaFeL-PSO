@@ -18,11 +18,9 @@ class Plots():
         for i in range(len(self.X_test)):
             Z_un[self.X_test[i][0], self.X_test[i][1]] = sigma[i]
             Z_mean[self.X_test[i][0], self.X_test[i][1]] = mu[i]
-        with open('C:/Users/mcjara/OneDrive - Universidad Loyola '
-                  'Andalucía/Documentos/PycharmProjects/PSODRL/Position/uncertainty.npy', 'wb') as g:
+        with open('./Position/uncertainty.npy', 'wb') as g:
             np.save(g, Z_un)
-        with open('C:/Users/mcjara/OneDrive - Universidad Loyola '
-                  'Andalucía/Documentos/PycharmProjects/PSODRL/Position/mean.npy', 'wb') as o:
+        with open('./Position/mean.npy', 'wb') as o:
             np.save(o, Z_mean)
         Z_un[Z_un == 0] = np.nan
         Z_mean[Z_mean == 0] = np.nan
@@ -34,10 +32,8 @@ class Plots():
         for i in range(len(array_position_x)):
             print(int(array_position_x[i]), int(array_position_y[i]))
             position[int(array_position_x[i]), int(array_position_y[i])] = 1
-        with open('C:/Users/mcjara/OneDrive - Universidad Loyola '
-                  'Andalucía/Documentos/PycharmProjects/PSODRL/Position/position' + str(n_data) + '.npy', 'wb') as g:
+        with open('./Position/position' + str(n_data) + '.npy', 'wb') as g:
             np.save(g, position)
-        return position
 
     def evolucion(self, log):
         gen = log.select("gen")
