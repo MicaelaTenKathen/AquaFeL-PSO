@@ -41,9 +41,8 @@ df_bounds: data of the limits of the surface where the drone can travel
 
 # Variables initialization
 
-seed = [20]  # , 95, 541, 65, 145, 156, 158, 12, 3, 89, 57, 123, 456, 789, 987, 654, 321, 147, 258, 369, 741, 852,
-# 963, 159, 951, 753, 357, 756, 8462, 4875]
-c1, c2, c30, c40, c3, c4, length_scale, lam = 3.1286, 2.568, 0, 0, 0.79, 0, 1, 0.1
+
+action = np.array([3.1286, 2.568, 0.79, 0])
 start_time = time.time()
 
 # PSO initialization
@@ -59,6 +58,7 @@ pso = PSOEnvironment(resolution, GEN, ys, method)
 
 g = pso.iteration()
 out = pso.reset()
+print(out)
 
 # Main part of the code
 
@@ -66,14 +66,13 @@ while g < GEN:
 
     g_ant = pso.iteration()
 
-    out = pso.ste(c1, c2, c3, c4)
+    out = pso.step(action)
 
     g = pso.iteration()
 
     if g == g_ant:
         g += 1
 
-out = out[~np.all(out == 0, axis=1)]
 # data = {'Seed': seed, 'GEN': GEN, 'Time': time.time() - start_time, 'MSE_GEN': MSE_data[-1],
 #         'Avr_dist': np.mean(distances)}
 x_g, y_g, n, X_test, secure, bench_function, grid_min, sigma, mu, MSE_data, it, part_ant = pso.data_out()

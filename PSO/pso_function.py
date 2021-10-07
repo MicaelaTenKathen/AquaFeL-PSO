@@ -75,7 +75,7 @@ class PSOEnvironment(gym.Env):
         self.method = method
 
         if self.method == 0:
-            self.out = np.zeros((self.GEN, 22))
+            self.out = np.zeros(22,)
         else:
             self.out = np.zeros((self.GEN, 6))
 
@@ -404,19 +404,19 @@ class PSOEnvironment(gym.Env):
                 self.toolbox.update(c1, c2, c3, c4, part)
                 if self.ok:
                     if self.method == 0:
-                        self.out[0, z] = part[0]
+                        self.out[z] = part[0]
                         z += 1
-                        self.out[0, z] = part[1]
+                        self.out[z] = part[1]
                         z += 1
-                        self.out[0, z + 6] = part.best[0]
-                        self.out[0, z + 7] = part.best[1]
+                        self.out[z + 6] = part.best[0]
+                        self.out[z + 7] = part.best[1]
                         if self.n_data == 4:
-                            self.out[0, 16] = self.best[0]
-                            self.out[0, 17] = self.best[1]
-                            self.out[0, 18] = self.sigma_best[0]
-                            self.out[0, 19] = self.sigma_best[1]
-                            self.out[0, 20] = self.mu_best[0]
-                            self.out[0, 21] = self.mu_best[1]
+                            self.out[16] = self.best[0]
+                            self.out[17] = self.best[1]
+                            self.out[18] = self.sigma_best[0]
+                            self.out[19] = self.sigma_best[1]
+                            self.out[20] = self.mu_best[0]
+                            self.out[21] = self.mu_best[1]
                     else:
                         posx = 2 * z
                         posy = (2 * z) + 1
@@ -436,7 +436,7 @@ class PSOEnvironment(gym.Env):
 
         return self.out
 
-    def ste(self, c1, c2, c3, c4):
+    def step(self, action):
 
         """
         The output "out" of the method "step" is the positions of the particles (drones) after traveling 1000 m
@@ -485,8 +485,6 @@ class PSOEnvironment(gym.Env):
                     self.n_data = 1
 
             if (np.mean(self.distances) - self.last_sample) >= (np.min(self.post_array) * self.lam):
-                c3 = c3
-                c4 = c4
                 self.k += 1
                 self.ok = True
                 self.last_sample = np.mean(self.distances)
@@ -520,19 +518,19 @@ class PSOEnvironment(gym.Env):
             z = 0
             for part in self.pop:
                 if self.method == 0:
-                    self.out[self.f, z] = part[0]
+                    self.state[z] = part[0]
                     z += 1
-                    self.out[self.f, z] = part[1]
+                    self.state[z] = part[1]
                     z += 1
-                    self.out[self.f, z + 6] = part.best[0]
-                    self.out[self.f, z + 7] = part.best[1]
+                    self.state[z + 6] = part.best[0]
+                    self.state[z + 7] = part.best[1]
                     if self.n_data == 4:
-                        self.out[self.f, 16] = self.best[0]
-                        self.out[self.f, 17] = self.best[1]
-                        self.out[self.f, 18] = self.sigma_best[0]
-                        self.out[self.f, 19] = self.sigma_best[1]
-                        self.out[self.f, 20] = self.mu_best[0]
-                        self.out[self.f, 21] = self.mu_best[1]
+                        self.state[16] = self.best[0]
+                        self.state[17] = self.best[1]
+                        self.state[18] = self.sigma_best[0]
+                        self.state[19] = self.sigma_best[1]
+                        self.state[20] = self.mu_best[0]
+                        self.state[21] = self.mu_best[1]
                 else:
                     posx = 2 * z
                     posy = (2 * z) + 1
@@ -548,7 +546,7 @@ class PSOEnvironment(gym.Env):
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
         print(self.logbook.stream)
 
-        return self.out
+        return self.state, reward, done, {}
 
     def iteration(self):
         return self.g
