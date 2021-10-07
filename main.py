@@ -63,6 +63,7 @@ out = pso.reset()
 # Main part of the code
 
 while g < GEN:
+
     g_ant = pso.iteration()
 
     out = pso.ste(c1, c2, c3, c4)
