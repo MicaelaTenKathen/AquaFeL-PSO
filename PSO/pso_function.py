@@ -80,7 +80,7 @@ class PSOEnvironment(gym.Env):
         if self.method == 0:
             self.state = np.zeros(22,)
         else:
-            self.state = np.zeros((self.xs, self.ys, 6))
+            self.state = np.zeros((6, self.xs, self.ys))
 
         self.grid_or = Map(self.xs, ys).black_white()
         self.grid_min, self.grid_max, self.grid_max_x, self.grid_max_y = Map(self.xs, ys).map_values()

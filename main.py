@@ -64,12 +64,12 @@ while not done:
 
     state, mse, done, dic = pso.step(action)
 
-part1 = state[:, :, 0]
-part2 = state[:, :, 1]
-part3 = state[:, :, 2]
-part4 = state[:, :, 3]
-sigma1 = state[:, :, 4]
-mu1 = state[:, :, 5]
+part1 = state[0, :, :]
+part2 = state[1, :, :]
+part3 = state[2, :, :]
+part4 = state[3, :, :]
+sigma1 = state[4, :, :]
+mu1 = state[5, :, :]
 # data = {'Seed': seed, 'GEN': GEN, 'Time': time.time() - start_time, 'MSE_GEN': MSE_data[-1],
 #         'Avr_dist': np.mean(distances)}
 x_g, y_g, n, X_test, secure, bench_function, grid_min, sigma, mu, MSE_data, it, part_ant = pso.data_out()
