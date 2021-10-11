@@ -47,7 +47,7 @@ start_time = time.time()
 
 # PSO initialization
 
-method = 0
+method = 1
 pso = PSOEnvironment(resolution, GEN, ys, method)
 
 
@@ -57,8 +57,8 @@ pso = PSOEnvironment(resolution, GEN, ys, method)
 # First iteration of PSO
 
 g = pso.iteration()
-out = pso.reset()
-print(out)
+state = pso.reset()
+print(state)
 
 # Main part of the code
 
@@ -66,13 +66,16 @@ while g < GEN:
 
     g_ant = pso.iteration()
 
-    out = pso.step(action)
+    state, mse, done, dic = pso.step(action)
 
     g = pso.iteration()
 
     if g == g_ant:
         g += 1
 
+part1 = state[:, :, 0]
+sigma1 = state[:, :, 4]
+mu1 = state[:, :, 5]
 # data = {'Seed': seed, 'GEN': GEN, 'Time': time.time() - start_time, 'MSE_GEN': MSE_data[-1],
 #         'Avr_dist': np.mean(distances)}
 x_g, y_g, n, X_test, secure, bench_function, grid_min, sigma, mu, MSE_data, it, part_ant = pso.data_out()

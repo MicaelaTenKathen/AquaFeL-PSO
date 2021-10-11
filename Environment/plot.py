@@ -26,14 +26,22 @@ class Plots():
         Z_mean[Z_mean == 0] = np.nan
         return Z_un, Z_mean
 
-    def part_position(self, array_position_x, array_position_y, n_data):
-        position = np.zeros([self.grid.shape[0], self.grid.shape[1]])
-        print(position.shape)
+    def state_sigma_mu(self, mu, sigma, state):
+        for i in range(len(self.X_test)):
+            state[self.X_test[i][0], self.X_test[i][1], 4] = sigma[i]
+            state[self.X_test[i][0], self.X_test[i][1], 5] = mu[i]
+        # with open('./Position/uncertainty.npy', 'wb') as g:
+        #     np.save(g, state)
+        # with open('./Position/mean.npy', 'wb') as o:
+        #     np.save(o, Z_mean)
+        return state
+
+    def part_position(self, array_position_x, array_position_y, state, z):
         for i in range(len(array_position_x)):
-            print(int(array_position_x[i]), int(array_position_y[i]))
-            position[int(array_position_x[i]), int(array_position_y[i])] = 1
-        with open('./Position/position' + str(n_data) + '.npy', 'wb') as g:
-            np.save(g, position)
+            state[int(array_position_x[i]), int(array_position_y[i]), z] = 1
+        # with open('./Position/position' + str(n_data) + '.npy', 'wb') as g:
+        #     np.save(g, position)
+        return state
 
     def evolucion(self, log):
         gen = log.select("gen")

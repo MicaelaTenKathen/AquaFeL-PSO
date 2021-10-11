@@ -8,6 +8,7 @@ from Data.utils import Utils
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
+from sklearn.metrics import mean_squared_error
 
 import numpy as np
 import random
@@ -73,11 +74,12 @@ class PSOEnvironment(gym.Env):
         self.MSE_data = list()
         self.it = list()
         self.method = method
+        self.mse = float()
 
         if self.method == 0:
-            self.out = np.zeros(22,)
+            self.state = np.zeros(22,)
         else:
-            self.out = np.zeros((self.GEN, 6))
+            self.state = np.zeros((self.xs, self.ys, 6))
 
         self.grid_or = Map(self.xs, ys).black_white()
         self.grid_min, self.grid_max, self.grid_max_x, self.grid_max_y = Map(self.xs, ys).map_values()
@@ -208,11 +210,11 @@ class PSOEnvironment(gym.Env):
         random.seed(self.seed[0])
         self.swarm()
         self.statistic()
-        c1, c2, c30, c40, c3, c4 = 3.1286, 2.568, 0, 0, 0.79, 0
+        action = [3.1286, 2.568, 0.79, 0]
         self.g = 0
         self.distances = np.zeros(4)
-        self.out = self.initcode(c1, c2, c3, c40)
-        return self.out
+        self.initcode(action)
+        return self.state
 
     def pso_fitness(self, part, first=False):
 
@@ -322,7 +324,7 @@ class PSOEnvironment(gym.Env):
 
         return self.sigma_best, self.mu_best
 
-    def initcode(self, c1, c2, c3, c4):
+    def initcode(self, action):
 
         """
         The output "out" of the method "initcode" is the positions of the particles (drones) after the first update of the
@@ -365,7 +367,7 @@ class PSOEnvironment(gym.Env):
                 self.n_data = 1
 
         for part in self.pop:
-            self.toolbox.update(c1, c2, c3, c4, part)
+            self.toolbox.update(action[0], action[1], action[2], action[3], part)
 
         while self.k == 0:
             for part in self.pop:
@@ -395,37 +397,38 @@ class PSOEnvironment(gym.Env):
                         self.n_data = 1
 
                 self.MSE_data, self.it = self.util.mse(self.g, self.fitness, self.mu_data, self.samples)
+                self.mse = mean_squared_error(y_true=self.fitness, y_pred=self.mu_data)
 
                 self.sigma_best, self.mu_best = self.sigma_max()
 
             z = 0
 
             for part in self.pop:
-                self.toolbox.update(c1, c2, c3, c4, part)
+                self.toolbox.update(action[0], action[1], action[2], action[3], part)
                 if self.ok:
+                    self.state = np.array(self.state)
                     if self.method == 0:
-                        self.out[z] = part[0]
+                        self.state[z] = part[0]
                         z += 1
-                        self.out[z] = part[1]
+                        self.state[z] = part[1]
                         z += 1
-                        self.out[z + 6] = part.best[0]
-                        self.out[z + 7] = part.best[1]
+                        self.state[z + 6] = part.best[0]
+                        self.state[z + 7] = part.best[1]
                         if self.n_data == 4:
-                            self.out[16] = self.best[0]
-                            self.out[17] = self.best[1]
-                            self.out[18] = self.sigma_best[0]
-                            self.out[19] = self.sigma_best[1]
-                            self.out[20] = self.mu_best[0]
-                            self.out[21] = self.mu_best[1]
+                            self.state[16] = self.best[0]
+                            self.state[17] = self.best[1]
+                            self.state[18] = self.sigma_best[0]
+                            self.state[19] = self.sigma_best[1]
+                            self.state[20] = self.mu_best[0]
+                            self.state[21] = self.mu_best[1]
                     else:
                         posx = 2 * z
                         posy = (2 * z) + 1
-                        self.out[z] = self.plot.part_position(self.part_ant[:, posx], self.part_ant[:, posy], self.n_data)
+                        self.state = self.plot.part_position(self.part_ant[:, posx], self.part_ant[:, posy], self.state,
+                                                             z)
                         z += 1
                         if self.n_data == 4:
-                            z_un, z_mean = self.plot.Z_var_mean(self.mu, self.sigma)
-                            self.out[4] = z_un
-                            self.out[5] = z_mean
+                            self.state = self.plot.state_sigma_mu(self.mu, self.sigma, self.state)
                     self.n_data += 1
                     if self.n_data > 4:
                         self.n_data = 1
@@ -434,7 +437,12 @@ class PSOEnvironment(gym.Env):
                 self.k += 1
                 self.ok = False
 
-        return self.out
+        if np.mean(self.distances) >= 250:
+            done = True
+        else:
+            done = False
+
+        return self.state, self.mse, done, {}
 
     def step(self, action):
 
@@ -501,12 +509,13 @@ class PSOEnvironment(gym.Env):
                         self.n_data = 1
 
                 self.MSE_data, self.it = self.util.mse(self.g, self.fitness, self.mu_data, self.samples)
+                self.mse = mean_squared_error(y_true=self.fitness, y_pred=self.mu_data)
 
                 self.sigma_best, self.mu_best = self.sigma_max()
                 self.ok = False
 
             for part in self.pop:
-                self.toolbox.update(c1, c2, c3, c4, part)
+                self.toolbox.update(action[0], action[1], action[2], action[3], part)
 
             dis_steps = np.mean(self.distances) - dist_ant
 
@@ -517,6 +526,7 @@ class PSOEnvironment(gym.Env):
         else:
             z = 0
             for part in self.pop:
+                self.state = self.state
                 if self.method == 0:
                     self.state[z] = part[0]
                     z += 1
@@ -534,19 +544,22 @@ class PSOEnvironment(gym.Env):
                 else:
                     posx = 2 * z
                     posy = (2 * z) + 1
-                    self.plot.part_position(self.part_ant[:, posx], self.part_ant[:, posy], self.n_data)
-
+                    self.state = self.plot.part_position(self.part_ant[:, posx], self.part_ant[:, posy], self.state, z)
                     z += 1
                     if self.n_data == 4:
-                        z_un, z_mean = self.plot.Z_var_mean(self.mu, self.sigma)
-
+                        self.state = self.plot.state_sigma_mu(self.mu, self.sigma, self.state)
                 self.n_data += 1
                 if self.n_data > 4:
                     self.n_data = 1
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
         print(self.logbook.stream)
 
-        return self.state, reward, done, {}
+        if np.mean(self.distances) >= 250:
+            done = True
+        else:
+            done = False
+
+        return self.state, self.mse, done, {}
 
     def iteration(self):
         return self.g

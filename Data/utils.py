@@ -65,7 +65,7 @@ class Utils:
         y_array = np.array(y_data)
         mu_array = np.array(mu_data)
         for i in range(len(mu_array)):
-            total_suma = (float(y_array[i]) - float(mu_array[i])) ** 2 + total_suma
+            total_suma = ((float(y_array[i]) - float(mu_array[i])) ** 2) + total_suma
         MSE = total_suma / samples
         self.MSE_data.append(MSE)
         self.it.append(g)
