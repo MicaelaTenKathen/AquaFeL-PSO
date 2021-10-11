@@ -24,10 +24,9 @@ from deap import tools
 
 class PSOEnvironment(gym.Env):
 
-    def __init__(self, resolution, GEN, ys, method, initial_seed=1000):
+    def __init__(self, resolution, ys, method, initial_seed=1000):
         self.f = int()
         self.k = int()
-        self.GEN = GEN
         self.population = 4
         self.resolution = resolution
         self.smin = 0
@@ -69,12 +68,14 @@ class PSOEnvironment(gym.Env):
         self.post_array = np.array([1, 1, 1, 1])
         self.distances = np.zeros(4)
         self.lam = 0.1
-        self.part_ant = np.zeros((GEN, 8))
+        self.part_ant = np.zeros((1, 8))
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
         self.MSE_data = list()
         self.it = list()
         self.method = method
         self.mse = float()
+        self.array_part = np.zeros((1, 8))
+
 
         if self.method == 0:
             self.state = np.zeros(22,)
@@ -140,7 +141,7 @@ class PSOEnvironment(gym.Env):
         v_u2 = u2 * (self.best - part)
         v_u3 = u3 * (self.sigma_best - part)
         v_u4 = u4 * (self.mu_best - part)
-        w = self.wmax - ((self.wmax - self.wmin) / self.GEN) * self.g
+        w = 1
         part.speed = v_u1 + v_u2 + v_u3 + v_u4 + part.speed * w
         for i, speed in enumerate(part.speed):
             if abs(speed) < part.smin:
@@ -249,7 +250,7 @@ class PSOEnvironment(gym.Env):
                 part.best = creator.Particle(part)
                 part.best.fitness.values = part.fitness.values
             else:
-                if self.g == self.GEN - 1:
+                if np.mean(self.distances) >= 249:
                     x_gap = int(part[0]) + abs(self.grid_min)
                     y_gap = int(part[1]) + abs(self.grid_min)
                     self.x_g.append(x_gap)
@@ -360,7 +361,7 @@ class PSOEnvironment(gym.Env):
         for part in self.pop:
             self.ok, part = self.pso_fitness(part, first=True)
 
-            self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant, self.distances, dfirst=True)
+            self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant, self.distances, self.array_part, dfirst=True)
 
             self.n_data += 1
             if self.n_data > 4:
@@ -374,7 +375,7 @@ class PSOEnvironment(gym.Env):
 
                 self.ok, part = self.pso_fitness(part, first=False)
 
-                self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant, self.distances, dfirst=False)
+                self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant, self.distances, self.array_part, dfirst=False)
 
                 self.n_data += 1
                 if self.n_data > 4:
@@ -482,11 +483,11 @@ class PSOEnvironment(gym.Env):
         self.n_data = 1
         self.f += 1
 
-        while dis_steps < 10 and self.g < self.GEN - 1:
+        while dis_steps < 10:
 
             for part in self.pop:
                 self.ok, part = self.pso_fitness(part, first=False)
-                self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant, self.distances, dfirst=False)
+                self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant, self.distances, self.array_part, dfirst=False)
 
                 self.n_data += 1
                 if self.n_data > 4:
@@ -521,9 +522,6 @@ class PSOEnvironment(gym.Env):
 
             self.g += 1
 
-        if self.g == self.GEN - 1:
-            pass
-        else:
             z = 0
             for part in self.pop:
                 self.state = self.state

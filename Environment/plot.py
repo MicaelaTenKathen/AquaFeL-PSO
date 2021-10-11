@@ -146,12 +146,11 @@ class Plots():
 
         return plot
 
-    def error(self, MSE_data, it, GEN):
+    def error(self, MSE_data, it):
         plt.figure(3)
         plt.plot(it, MSE_data, '-')
         plt.xlabel("Iterations")
         plt.ylabel("MSE")
-        plt.xlim([0, GEN])
         plt.grid(True)
         plt.title("Mean Square Error")
         # plt.savefig("MSE", dpi=200)

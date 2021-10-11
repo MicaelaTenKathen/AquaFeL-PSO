@@ -17,7 +17,6 @@ GEN: maximum number of code iterations
 resolution = 1
 xs = 100
 ys = 150
-GEN = 6000
 
 # Map
 
@@ -48,7 +47,7 @@ start_time = time.time()
 # PSO initialization
 
 method = 1
-pso = PSOEnvironment(resolution, GEN, ys, method)
+pso = PSOEnvironment(resolution, ys, method)
 
 
 # Gaussian process initialization
@@ -56,24 +55,19 @@ pso = PSOEnvironment(resolution, GEN, ys, method)
 
 # First iteration of PSO
 
-g = pso.iteration()
+done = False
 state = pso.reset()
-print(state)
 
 # Main part of the code
 
-while g < GEN:
-
-    g_ant = pso.iteration()
+while not done:
 
     state, mse, done, dic = pso.step(action)
 
-    g = pso.iteration()
-
-    if g == g_ant:
-        g += 1
-
 part1 = state[:, :, 0]
+part2 = state[:, :, 1]
+part3 = state[:, :, 2]
+part4 = state[:, :, 3]
 sigma1 = state[:, :, 4]
 mu1 = state[:, :, 5]
 # data = {'Seed': seed, 'GEN': GEN, 'Time': time.time() - start_time, 'MSE_GEN': MSE_data[-1],
@@ -82,4 +76,4 @@ x_g, y_g, n, X_test, secure, bench_function, grid_min, sigma, mu, MSE_data, it, 
 plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
 plot.gaussian(x_g, y_g, n, mu, sigma, part_ant)
 plot.benchmark()
-plot.error(MSE_data, it, GEN)
+plot.error(MSE_data, it)
