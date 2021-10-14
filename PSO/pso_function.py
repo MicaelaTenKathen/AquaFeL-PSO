@@ -76,7 +76,6 @@ class PSOEnvironment(gym.Env):
         self.mse = float()
         self.array_part = np.zeros((1, 8))
 
-
         if self.method == 0:
             self.state = np.zeros(22,)
         else:
