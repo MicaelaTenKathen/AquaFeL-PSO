@@ -24,7 +24,7 @@ from deap import tools
 
 class PSOEnvironment(gym.Env):
 
-    def __init__(self, resolution, ys, method, initial_seed=1000):
+    def __init__(self, resolution, ys, method, reward_function='mse', initial_seed=1000):
         self.f = int()
         self.k = int()
         self.population = 4
@@ -74,7 +74,9 @@ class PSOEnvironment(gym.Env):
         self.it = list()
         self.method = method
         self.mse = float()
+        self.duplicate = False
         self.array_part = np.zeros((1, 8))
+        self.reward_function = reward_function
 
         if self.method == 0:
             self.state = np.zeros(22,)
@@ -231,9 +233,19 @@ class PSOEnvironment(gym.Env):
                 part.fitness.values = [self.bench_function[i]]
                 break
         if self.ok:
-            self.x_h.append(int(part[0]))
-            self.y_h.append(int(part[1]))
-            self.fitness.append(part.fitness.values)
+            self.duplicate = False
+            for i in range(len(self.x_h)):
+                if self.x_h[i] == self.x_bench and self.y_h[i] == self.y_bench:
+                    self.duplicate = True
+                    break
+                else:
+                    self.duplicate = False
+            if self.duplicate:
+                pass
+            else:
+                self.x_h.append(int(part[0]))
+                self.y_h.append(int(part[1]))
+                self.fitness.append(part.fitness.values)
         else:
             self.x_p.append(part[0])
             self.y_p.append(part[1])
@@ -286,13 +298,14 @@ class PSOEnvironment(gym.Env):
         r = self.n_data - 1
         self.post_array[r] = post_ls
 
-        for i in range(len(self.X_test)):
-            di = self.X_test[i]
-            dix = di[0]
-            diy = di[1]
-            if dix == self.x_bench and diy == self.y_bench:
-                self.mu_data.append(self.mu[i])
-                self.sigma_data.append(self.sigma[i])
+        if not self.duplicate:
+            for i in range(len(self.X_test)):
+                di = self.X_test[i]
+                dix = di[0]
+                diy = di[1]
+                if dix == self.x_bench and diy == self.y_bench:
+                    self.mu_data.append(self.mu[i])
+                    self.sigma_data.append(self.sigma[i])
 
         return self.post_array
 
@@ -323,6 +336,14 @@ class PSOEnvironment(gym.Env):
         self.mu_best = np.array(best_2)
 
         return self.sigma_best, self.mu_best
+
+    def calculate_reward(self):
+        self.mse = mean_squared_error(y_true=self.fitness, y_pred=self.mu_data)
+        if self.reward_function == 'mse':
+            reward = -self.mse
+        elif self.reward_function == 'inc_mse':
+            reward = self.MSE_data[-2] - self.MSE_data[-1]
+        return reward
 
     def initcode(self, action):
 
@@ -397,7 +418,6 @@ class PSOEnvironment(gym.Env):
                         self.n_data = 1
 
                 self.MSE_data, self.it = self.util.mse(self.g, self.fitness, self.mu_data, self.samples)
-                self.mse = mean_squared_error(y_true=self.fitness, y_pred=self.mu_data)
 
                 self.sigma_best, self.mu_best = self.sigma_max()
 
@@ -437,12 +457,14 @@ class PSOEnvironment(gym.Env):
                 self.k += 1
                 self.ok = False
 
+        reward = self.calculate_reward()
+
         if np.mean(self.distances) >= 250:
             done = True
         else:
             done = False
 
-        return self.state, self.mse, done, {}
+        return self.state, reward, done, {}
 
     def step(self, action):
 
@@ -521,6 +543,7 @@ class PSOEnvironment(gym.Env):
 
             self.g += 1
 
+
             z = 0
             for part in self.pop:
                 self.state = self.state
@@ -548,15 +571,17 @@ class PSOEnvironment(gym.Env):
                 self.n_data += 1
                 if self.n_data > 4:
                     self.n_data = 1
+
+        reward = self.calculate_reward()
+
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
         print(self.logbook.stream)
-
         if np.mean(self.distances) >= 250:
             done = True
         else:
             done = False
 
-        return self.state, self.mse, done, {}
+        return self.state, reward, done, {}
 
     def iteration(self):
         return self.g
