@@ -79,7 +79,7 @@ class Benchmark_function():
             ymax = 10
 
             if self.randomize_shekel:
-                no_maxima = np.random.randint(4, 6)
+                no_maxima = np.random.randint(3, 6)
                 xmin = 0
                 xmax = 10
                 ymin = 0

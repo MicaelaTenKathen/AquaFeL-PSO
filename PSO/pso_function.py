@@ -60,7 +60,7 @@ class PSOEnvironment(gym.Env):
         self.sigma_best = [0, 0]
         self.mu_best = [0, 0]
         self.n_data = 1
-        self.num = 2
+        self.num = 0
         self.initial_seed = initial_seed
         self.seed = self.initial_seed
         self.mu = []
@@ -94,9 +94,9 @@ class PSOEnvironment(gym.Env):
 
         self.bench_function = Benchmark_function('./GroundTruth/shww' + str(self.num) + '.npy'.format(0), self.grid_or,
                                                  self.resolution, self.xs, self.ys,
-                                                 w_ostacles=False, obstacles_on=False, randomize_shekel=False,
+                                                 w_ostacles=False, obstacles_on=False, randomize_shekel=True,
                                                  sensor="", no_maxima=10,
-                                                 load_from_db=True, file=0).create_map(self.num)
+                                                 load_from_db=False, file=0).create_map(self.num)
 
         self.plot = Plots(self.xs, self.ys, self.X_test, self.secure, self.bench_function, self.grid_min)
 
@@ -200,9 +200,10 @@ class PSOEnvironment(gym.Env):
         """
         Initialization of the pso.
         """
+        self.num += 1
         self.bench_function = Benchmark_function('./GroundTruth/shww' + str(self.num) + '.npy'.format(0), self.grid_or,
                                                  self.resolution, self.xs, self.ys,
-                                                 w_ostacles=False, obstacles_on=False, randomize_shekel=False,
+                                                 w_ostacles=False, obstacles_on=False, randomize_shekel=True,
                                                  sensor="", no_maxima=10,
                                                  load_from_db=False, file=0).create_map(self.num)
         self.createPart()
