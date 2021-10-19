@@ -92,11 +92,7 @@ class PSOEnvironment(gym.Env):
         self.df_bounds, self.X_test = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
         self.secure, self.df_bounds = Bounds(self.resolution, self.xs, self.ys).interest_area()
 
-        self.bench_function = Benchmark_function('./GroundTruth/shww' + str(self.num) + '.npy'.format(0), self.grid_or,
-                                                 self.resolution, self.xs, self.ys,
-                                                 w_ostacles=False, obstacles_on=False, randomize_shekel=True,
-                                                 sensor="", no_maxima=10,
-                                                 load_from_db=False, file=0).create_map(self.num)
+        self.bench_function = []
 
         self.plot = Plots(self.xs, self.ys, self.X_test, self.secure, self.bench_function, self.grid_min)
 
