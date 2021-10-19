@@ -67,7 +67,7 @@ class PSOEnvironment(gym.Env):
         self.g = 0
         self.post_array = np.array([1, 1, 1, 1])
         self.distances = np.zeros(4)
-        self.lam = 0.1
+        self.lam = 0.6
         self.part_ant = np.zeros((1, 8))
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
         self.MSE_data = list()
@@ -340,7 +340,7 @@ class PSOEnvironment(gym.Env):
     def calculate_reward(self):
         self.mse = mean_squared_error(y_true=self.fitness, y_pred=self.mu_data)
         if self.reward_function == 'mse':
-            reward = -self.mse
+            reward = -self.MSE_data[-1]
         elif self.reward_function == 'inc_mse':
             reward = self.MSE_data[-2] - self.MSE_data[-1]
         return reward
@@ -543,34 +543,33 @@ class PSOEnvironment(gym.Env):
 
             self.g += 1
 
-
-            z = 0
-            for part in self.pop:
-                self.state = self.state
-                if self.method == 0:
-                    self.state[z] = part[0]
-                    z += 1
-                    self.state[z] = part[1]
-                    z += 1
-                    self.state[z + 6] = part.best[0]
-                    self.state[z + 7] = part.best[1]
-                    if self.n_data == 4:
-                        self.state[16] = self.best[0]
-                        self.state[17] = self.best[1]
-                        self.state[18] = self.sigma_best[0]
-                        self.state[19] = self.sigma_best[1]
-                        self.state[20] = self.mu_best[0]
-                        self.state[21] = self.mu_best[1]
-                else:
-                    posx = 2 * z
-                    posy = (2 * z) + 1
-                    self.state = self.plot.part_position(self.part_ant[:, posx], self.part_ant[:, posy], self.state, z)
-                    z += 1
-                    if self.n_data == 4:
-                        self.state = self.plot.state_sigma_mu(self.mu, self.sigma, self.state)
-                self.n_data += 1
-                if self.n_data > 4:
-                    self.n_data = 1
+        z = 0
+        for part in self.pop:
+            self.state = self.state
+            if self.method == 0:
+                self.state[z] = part[0]
+                z += 1
+                self.state[z] = part[1]
+                z += 1
+                self.state[z + 6] = part.best[0]
+                self.state[z + 7] = part.best[1]
+                if self.n_data == 4:
+                    self.state[16] = self.best[0]
+                    self.state[17] = self.best[1]
+                    self.state[18] = self.sigma_best[0]
+                    self.state[19] = self.sigma_best[1]
+                    self.state[20] = self.mu_best[0]
+                    self.state[21] = self.mu_best[1]
+            else:
+                posx = 2 * z
+                posy = (2 * z) + 1
+                self.state = self.plot.part_position(self.part_ant[:, posx], self.part_ant[:, posy], self.state, z)
+                z += 1
+                if self.n_data == 4:
+                    self.state = self.plot.state_sigma_mu(self.mu, self.sigma, self.state)
+            self.n_data += 1
+            if self.n_data > 4:
+                self.n_data = 1
 
         reward = self.calculate_reward()
 
