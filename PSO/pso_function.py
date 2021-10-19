@@ -36,7 +36,7 @@ class PSOEnvironment(gym.Env):
         self.wmax = 0.9 / (15000 / ys)
         self.xs = int(10000 / (15000 / ys))
         self.ys = ys
-        ker = RBF(length_scale=0.7, length_scale_bounds=(1e-1, 10))
+        ker = RBF(length_scale=10, length_scale_bounds=(1e-1, 10))
         self.gpr = GaussianProcessRegressor(kernel=ker, alpha=1 ** 2)
         self.x_h = list()
         self.y_h = list()
@@ -53,6 +53,7 @@ class PSOEnvironment(gym.Env):
         self.s_ant = np.zeros(4)
         self.x_g = list()
         self.y_g = list()
+        self.ngp = list()
         self.n = list()
         self.samples = int()
         self.dist_ant = float()
@@ -245,6 +246,7 @@ class PSOEnvironment(gym.Env):
             else:
                 self.x_h.append(int(part[0]))
                 self.y_h.append(int(part[1]))
+                self.ngp.append(self.n_data)
                 self.fitness.append(part.fitness.values)
         else:
             self.x_p.append(part[0])
@@ -534,6 +536,7 @@ class PSOEnvironment(gym.Env):
                 self.mse = mean_squared_error(y_true=self.fitness, y_pred=self.mu_data)
 
                 self.sigma_best, self.mu_best = self.sigma_max()
+
                 self.ok = False
 
             for part in self.pop:
