@@ -2,6 +2,10 @@ from Benchmark.benchmark_functions import Benchmark_function
 from Environment.map import Map
 from Environment.plot import Plots
 import time
+from warnings import simplefilter
+from sklearn.exceptions import ConvergenceWarning
+simplefilter("ignore", category=ConvergenceWarning)
+
 from PSO.pso_function import PSOEnvironment
 import numpy as np
 
@@ -46,7 +50,7 @@ start_time = time.time()
 
 # PSO initialization
 
-method = 1
+method = 0
 pso = PSOEnvironment(resolution, ys, method)
 
 
