@@ -1,5 +1,5 @@
 def map_path():
-    return '.\Image\snazzy-image-prueba.png'
+    return './Image/snazzy-image-prueba.png'
 
 def bounds_path():
     return './GroundTruth/bounds.npy'
