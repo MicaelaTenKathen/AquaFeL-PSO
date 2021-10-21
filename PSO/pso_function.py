@@ -5,15 +5,9 @@ from Benchmark.benchmark_functions import Benchmark_function
 from Environment.bounds import Bounds
 from Data.utils import Utils
 
-
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 from sklearn.metrics import mean_squared_error
-
-import warnings
-
-def warn(*args, **kwargs):
-    pass
 
 import numpy as np
 import random
@@ -26,10 +20,27 @@ from deap import tools
 
 """[https://deap.readthedocs.io/en/master/examples/pso_basic.html]"""
 
+import warnings
+
+
+def warn(*args, **kwargs):
+    pass
+
+
+def createPart():
+    """
+    Creation of the objects "FitnessMax" and "Particle"
+    """
+
+    creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+    creator.create("Particle", np.ndarray, fitness=creator.FitnessMax, speed=None, smin=None, smax=None,
+                   best=None)
+    creator.create("BestGP", np.ndarray, fitness=creator.FitnessMax)
+
 
 class PSOEnvironment(gym.Env):
 
-    def __init__(self, resolution, ys, method, reward_function='mse', initial_seed=1000, behavioral_method = 0):
+    def __init__(self, resolution, ys, method, reward_function='mse', initial_seed=1000, behavioral_method=0):
         self.f = int()
         self.k = int()
         self.population = 4
@@ -86,10 +97,9 @@ class PSOEnvironment(gym.Env):
         self.behavioral_method = behavioral_method
 
         if self.method == 0:
-            self.state = np.zeros(22,)
+            self.state = np.zeros(22, )
         else:
             self.state = np.zeros((6, self.xs, self.ys))
-
 
         self.grid_or = Map(self.xs, ys).black_white()
         self.grid_min, self.grid_max, self.grid_max_x, self.grid_max_y = Map(self.xs, ys).map_values()
@@ -108,16 +118,7 @@ class PSOEnvironment(gym.Env):
 
         self.util = Utils()
 
-    def createPart(self):
-
-        """
-        Creation of the objects "FitnessMax" and "Particle"
-        """
-
-        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-        creator.create("Particle", np.ndarray, fitness=creator.FitnessMax, speed=None, smin=None, smax=None,
-                       best=None)
-        creator.create("BestGP", np.ndarray, fitness=creator.FitnessMax)
+        createPart()
 
     def generatePart(self):
 
@@ -210,13 +211,57 @@ class PSOEnvironment(gym.Env):
         """
         Initialization of the pso.
         """
+
+        self.f = int()
+        self.k = int()
+        self.x_h = list()
+        self.y_h = list()
+        self.x_p = list()
+        self.y_p = list()
+        self.fitness = list()
+        self.y_data = list()
+        self.mu_data = list()
+        self.sigma_data = list()
+        self.x_bench = int()
+        self.y_bench = int()
+        self.n_plot = float(1)
+        self.s_n = np.array([True, True, True, True])
+        self.s_ant = np.zeros(4)
+        self.x_g = list()
+        self.y_g = list()
+        self.ngp = list()
+        self.n = list()
+        self.samples = int()
+        self.dist_ant = float()
+        self.sigma_best = [0, 0]
+        self.mu_best = [0, 0]
+        self.n_data = 1
+        self.mu = []
+        self.sigma = []
+        self.g = 0
+        self.post_array = np.array([1, 1, 1, 1])
+        self.distances = np.zeros(4)
+        self.part_ant = np.zeros((1, 8))
+        self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
+        self.MSE_data = list()
+        self.it = list()
+        self.mse = float()
+        self.duplicate = False
+        self.array_part = np.zeros((1, 8))
+
+        if self.method == 0:
+            self.state = np.zeros(22, )
+        else:
+            self.state = np.zeros((6, self.xs, self.ys))
+
+        self.bench_function = []
+
         self.num += 1
         self.bench_function = Benchmark_function('./GroundTruth/shww' + str(self.num) + '.npy'.format(0), self.grid_or,
                                                  self.resolution, self.xs, self.ys,
                                                  w_ostacles=False, obstacles_on=False, randomize_shekel=True,
                                                  sensor="", no_maxima=10,
                                                  load_from_db=False, file=0).create_map(self.num)
-        self.createPart()
         self.generatePart()
         self.tool()
         self.seed = [20]
@@ -236,7 +281,8 @@ class PSOEnvironment(gym.Env):
         Obtains the local best (part.best) of each particle (drone) and the global best (best) of the swarm (fleet).
         """
 
-        part, self.s_n = Limits(self.secure, self.xs, self.ys).new_limit(self.g, part, self.s_n, self.n_data, self.s_ant, self.part_ant)
+        part, self.s_n = Limits(self.secure, self.xs, self.ys).new_limit(self.g, part, self.s_n, self.n_data,
+                                                                         self.s_ant, self.part_ant)
         self.x_bench = int(part[0])
         self.y_bench = int(part[1])
 
@@ -394,7 +440,8 @@ class PSOEnvironment(gym.Env):
         for part in self.pop:
             self.ok, part = self.pso_fitness(part, first=True)
 
-            self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant, self.distances, self.array_part, dfirst=True)
+            self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant,
+                                                                    self.distances, self.array_part, dfirst=True)
 
             self.n_data += 1
             if self.n_data > 4:
@@ -408,7 +455,8 @@ class PSOEnvironment(gym.Env):
 
                 self.ok, part = self.pso_fitness(part, first=False)
 
-                self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant, self.distances, self.array_part, dfirst=False)
+                self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant,
+                                                                        self.distances, self.array_part, dfirst=False)
 
                 self.n_data += 1
                 if self.n_data > 4:
@@ -521,7 +569,8 @@ class PSOEnvironment(gym.Env):
 
             for part in self.pop:
                 self.ok, part = self.pso_fitness(part, first=False)
-                self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant, self.distances, self.array_part, dfirst=False)
+                self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant,
+                                                                        self.distances, self.array_part, dfirst=False)
 
                 self.n_data += 1
                 if self.n_data > 4:
