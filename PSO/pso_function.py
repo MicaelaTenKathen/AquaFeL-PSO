@@ -10,6 +10,11 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 from sklearn.metrics import mean_squared_error
 
+import warnings
+
+def warn(*args, **kwargs):
+    pass
+
 import numpy as np
 import random
 import math
@@ -24,7 +29,7 @@ from deap import tools
 
 class PSOEnvironment(gym.Env):
 
-    def __init__(self, resolution, ys, method, reward_function='mse', initial_seed=1000):
+    def __init__(self, resolution, ys, method, reward_function='mse', initial_seed=1000, behavioral_method = 0):
         self.f = int()
         self.k = int()
         self.population = 4
@@ -78,11 +83,13 @@ class PSOEnvironment(gym.Env):
         self.duplicate = False
         self.array_part = np.zeros((1, 8))
         self.reward_function = reward_function
+        self.behavioral_method = behavioral_method
 
         if self.method == 0:
             self.state = np.zeros(22,)
         else:
             self.state = np.zeros((6, self.xs, self.ys))
+
 
         self.grid_or = Map(self.xs, ys).black_white()
         self.grid_min, self.grid_max, self.grid_max_x, self.grid_max_y = Map(self.xs, ys).map_values()
@@ -131,10 +138,17 @@ class PSOEnvironment(gym.Env):
         Calculates the speed and the position of the particles (drones).
         """
 
-        u1 = np.array([random.uniform(0, c1) for _ in range(len(part))])
-        u2 = np.array([random.uniform(0, c2) for _ in range(len(part))])
-        u3 = np.array([random.uniform(0, c3) for _ in range(len(part))])
-        u4 = np.array([random.uniform(0, c4) for _ in range(len(part))])
+        if self.behavioral_method == 0:
+            u1 = np.array([random.uniform(0, c1) for _ in range(len(part))])
+            u2 = np.array([random.uniform(0, c2) for _ in range(len(part))])
+            u3 = np.array([random.uniform(0, c3) for _ in range(len(part))])
+            u4 = np.array([random.uniform(0, c4) for _ in range(len(part))])
+        else:
+            u1 = c1
+            u2 = c2
+            u3 = c3
+            u4 = c4
+
         v_u1 = u1 * (part.best - part)
         v_u2 = u2 * (self.best - part)
         v_u3 = u3 * (self.sigma_best - part)
