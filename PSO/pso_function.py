@@ -514,14 +514,7 @@ class PSOEnvironment(gym.Env):
                 self.k += 1
                 self.ok = False
 
-        reward = self.calculate_reward()
-
-        if np.mean(self.distances) >= 250:
-            done = True
-        else:
-            done = False
-
-        return self.state, reward, done, {}
+        return self.state
 
     def step(self, action):
 
@@ -633,7 +626,7 @@ class PSOEnvironment(gym.Env):
         reward = self.calculate_reward()
 
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
-        print(self.logbook.stream)
+        # print(self.logbook.stream)
         if np.mean(self.distances) >= 250:
             done = True
         else:
