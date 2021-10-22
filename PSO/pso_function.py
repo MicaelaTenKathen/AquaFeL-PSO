@@ -18,14 +18,10 @@ from deap import base
 from deap import creator
 from deap import tools
 
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 """[https://deap.readthedocs.io/en/master/examples/pso_basic.html]"""
-
-import warnings
-
-
-def warn(*args, **kwargs):
-    pass
-
 
 def createPart():
     """

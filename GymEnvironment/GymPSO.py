@@ -18,13 +18,13 @@ class GymPSO(gym.Env, ABC):
                                   method=method,
                                   reward_function=reward_function,
                                   initial_seed=initial_seed,
-                                  behavioral_method=behavioral_method)
+                                  behavioral_method=behavioral_method,)
 
         """ Action space - Always the same """
-        self.action_space = gym.spaces.Box(0, 1, shape=(4,))
+        self.action_space = gym.spaces.Box(-1, 1, shape=(4,))
 
         """ Observation space - depend on method"""
-        self.observation_space = gym.spaces.Box(0, 1, shape=self.env.state.shape)
+        self.observation_space = gym.spaces.Box(-10, 10, shape=self.env.state.shape)
 
         self.method = method
 
@@ -56,7 +56,7 @@ class GymPSO(gym.Env, ABC):
 
     def step(self, action):
 
-        action_denormalized = action * 4
+        action_denormalized = (action + 1)/2 * 4
 
         state, reward, done, _ = self.env.step(action_denormalized)
 

@@ -51,34 +51,44 @@ start_time = time.time()
 # PSO initialization
 
 method = 0
-pso = PSOEnvironment(resolution, ys, method)
+pso = PSOEnvironment(resolution, ys, method, reward_function='inc_mse')
 
 
 # Gaussian process initialization
 
 
 # First iteration of PSO
+import matplotlib.pyplot as plt
 
-done = False
-state = pso.reset()
+mse_vec = []
 
-# Main part of the code
+for i in range(5):
 
-while not done:
+    done = False
+    state = pso.reset()
+    R_vec = []
 
-    state, reward, done, dic = pso.step(action)
+    # Main part of the code
 
-# part1 = state[0, :, :]
-# part2 = state[1, :, :]
-# part3 = state[2, :, :]
-# part4 = state[3, :, :]
-# sigma1 = state[4, :, :]
-# mu1 = state[5, :, :]
-print('Time', time.time() - start_time)
-# data = {'Seed': seed, 'GEN': GEN, 'Time': time.time() - start_time, 'MSE_GEN': MSE_data[-1],
-#         'Avr_dist': np.mean(distances)}
-x_g, y_g, n, X_test, secure, bench_function, grid_min, sigma, mu, MSE_data, it, part_ant = pso.data_out()
+    while not done:
+
+        state, reward, done, dic = pso.step(action)
+
+        R_vec.append(-reward)
+
+
+
+    print('Time', time.time() - start_time)
+
+    x_g, y_g, n, X_test, secure, bench_function, grid_min, sigma, mu, MSE_data, it, part_ant = pso.data_out()
+
+    plt.plot(R_vec)
+
+plt.grid()
+plt.show()
+"""
 plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
 plot.gaussian(x_g, y_g, n, mu, sigma, part_ant)
 plot.benchmark()
 plot.error(MSE_data, it)
+"""
