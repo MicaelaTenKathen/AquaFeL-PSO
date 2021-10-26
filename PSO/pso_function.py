@@ -1,7 +1,7 @@
 from Data.limits import Limits
 from Environment.plot import Plots
 from Environment.map import Map
-from Benchmark.benchmark_functions import Benchmark_function
+from Benchmark.benchmark_functions import Benchmark_function_reset
 from Environment.bounds import Bounds
 from Data.utils import Utils
 
@@ -19,9 +19,11 @@ from deap import creator
 from deap import tools
 
 import sys, os
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 """[https://deap.readthedocs.io/en/master/examples/pso_basic.html]"""
+
 
 def createPart():
     """
@@ -253,16 +255,15 @@ class PSOEnvironment(gym.Env):
         self.bench_function = []
 
         self.num += 1
-        self.bench_function = Benchmark_function('./GroundTruth/shww' + str(self.num) + '.npy'.format(0), self.grid_or,
-                                                 self.resolution, self.xs, self.ys,
-                                                 w_ostacles=False, obstacles_on=False, randomize_shekel=True,
-                                                 sensor="", no_maxima=10,
-                                                 load_from_db=False, file=0).create_map(self.num)
+        self.bench_function = Benchmark_function_reset(self.grid_or,
+                                                       self.resolution, self.xs, self.ys,
+                                                       w_ostacles=False, obstacles_on=False, randomize_shekel=True,
+                                                       sensor="", no_maxima=10,
+                                                       file=0).create_new_map()
         self.generatePart()
         self.tool()
-        self.seed = [20]
-        # np.random.seed(self.seed)
-        random.seed(self.seed[0])
+        #np.random.seed()
+        random.seed()
         self.swarm()
         self.statistic()
         action = [3.1286, 2.568, 0.79, 0]
@@ -626,7 +627,7 @@ class PSOEnvironment(gym.Env):
         reward = self.calculate_reward()
 
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
-        # print(self.logbook.stream)
+        #print(self.logbook.stream)
         if np.mean(self.distances) >= 250:
             done = True
         else:

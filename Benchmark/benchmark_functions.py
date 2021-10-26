@@ -11,7 +11,8 @@ from Environment.bounds import Bounds
 
 
 class Benchmark_function():
-    def __init__(self, e, grid, resolution, xs, ys, w_ostacles=False, obstacles_on=False, randomize_shekel=False, sensor="",
+    def __init__(self, e, grid, resolution, xs, ys, w_ostacles=False, obstacles_on=False, randomize_shekel=False,
+                 sensor="",
                  no_maxima=10, load_from_db=False, file=0):
         self.w_obstacles = w_ostacles
         self.e = e
@@ -117,6 +118,94 @@ class Benchmark_function():
             for i in range(len(X_test_or)):
                 self.bench.append(map_created[X_test_or[i][0], X_test_or[i][1]])
 
-            bench_function_or = np.array(self.bench) # Return solo esto de benchmark function
+            bench_function_or = np.array(self.bench)  # Return solo esto de benchmark function
 
             return bench_function_or
+
+
+class Benchmark_function_reset():
+    def __init__(self, grid, resolution, xs, ys, w_ostacles=False, obstacles_on=False, randomize_shekel=False,
+                 sensor="",
+                 no_maxima=10, file=0):
+        self.w_obstacles = w_ostacles
+        self.grid = grid
+        self.resolution = resolution
+        self.obstacles_on = obstacles_on
+        self.randomize_shekel = randomize_shekel
+        self.sensor = sensor
+        self.no_maxima = no_maxima
+        self.file = file
+        self.xs = xs
+        self.ys = ys
+        self.a = []
+        self.c = []
+        self.bench = list()
+        return
+
+    def bohachevsky_arg0(self, sol):
+        return np.nan if self.w_obstacles and sol[2] == 1 else benchmarks.bohachevsky(sol[:2])[0]
+
+    def ackley_arg0(self, sol):
+        return np.nan if self.w_obstacles and sol[2] == 1 else benchmarks.ackley(sol[:2])[0]
+
+    def rosenbrock_arg0(self, sol):
+        return np.nan if self.w_obstacles and sol[2] == 1 else benchmarks.rosenbrock(sol[:2])[0]
+
+    def himmelblau_arg0(self, sol):
+        return np.nan if self.w_obstacles and sol[2] == 1 else benchmarks.himmelblau(sol[:2])[0]
+
+    def branin(self, sol):
+        return np.nan if self.w_obstacles and sol[2] == 1 else brn(sol[:2])
+
+    def shekel_arg(self, sol):
+        return np.nan if self.w_obstacles and sol[2] == 1 else benchmarks.shekel(sol[:2], self.a, self.c)[0]
+
+    def schwefel_arg0(self, sol):
+        return np.nan if self.w_obstacles and sol[2] == 1 else benchmarks.schwefel(sol[:2])[0]
+
+    def create_new_map(self):
+        self.w_obstacles = self.obstacles_on
+        xmin = -5
+        xmax = 5
+        ymin = 0
+        ymax = 10
+
+        if self.randomize_shekel:
+            no_maxima = np.random.randint(1, 7)
+            xmin = 0
+            xmax = 10
+            ymin = 0
+            ymax = 10
+
+            for i in range(no_maxima):
+                self.a.append([1.2 + np.random.rand() * 8.8, 1.2 + np.random.rand() * 8.8])
+                self.c.append(5)
+            self.a = np.array(self.a)
+            self.c = np.array(self.c).T
+        else:
+            self.a = np.array([[0.16, 1 / 1.5], [0.9, 0.2 / 1.5]])
+            self.c = np.array([0.15, 0.15]).T
+
+        xadd = 0
+        yadd = 0
+        gr = self.grid
+
+        _x = np.arange(xmin, xmax, self.resolution * (xmax - xmin) / (gr.shape[1])) + xadd
+        _y = np.arange(xmin, xmax, self.resolution * (ymax - ymin) / (gr.shape[0])) + yadd
+        _x, _y = np.meshgrid(_x, _y)
+
+        map_created = np.fromiter(map(self.shekel_arg, zip(_x.flat, _y.flat, gr.flat)), dtype=np.float,
+                                  count=_x.shape[0] * _x.shape[1]).reshape(_x.shape)
+
+        meanz = np.nanmean(map_created)
+        stdz = np.nanstd(map_created)
+        map_created = (map_created - meanz) / stdz
+
+        df_bounds, X_test_or = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
+
+        for i in range(len(X_test_or)):
+            self.bench.append(map_created[X_test_or[i][0], X_test_or[i][1]])
+
+        bench_function = np.array(self.bench)  # Return solo esto de benchmark function
+
+        return bench_function
