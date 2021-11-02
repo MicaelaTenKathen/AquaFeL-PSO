@@ -4,6 +4,7 @@ from Environment.map import Map
 from Benchmark.benchmark_functions import Benchmark_function_reset
 from Environment.bounds import Bounds
 from Data.utils import Utils
+from Environment.EnvironmentUtils import GroundTruth
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
@@ -38,20 +39,20 @@ def createPart():
 
 class PSOEnvironment(gym.Env):
 
-    def __init__(self, resolution, ys, method, reward_function='mse', initial_seed=1000, behavioral_method=0):
+    def __init__(self, resolution, ys, method, navigation_map, reward_function='mse', initial_seed=0, behavioral_method=0):
         self.f = int()
         self.k = int()
         self.population = 4
         self.resolution = resolution
         self.smin = 0
-        self.smax = 2 / (15000 / ys)
+        self.smax = 3
         self.size = 2
         self.wmin = 0.4 / (15000 / ys)
         self.wmax = 0.9 / (15000 / ys)
         self.xs = int(10000 / (15000 / ys))
         self.ys = ys
         ker = RBF(length_scale=10, length_scale_bounds=(1e-1, 10))
-        self.gpr = GaussianProcessRegressor(kernel=ker, alpha=1 ** 2)
+        self.gpr = GaussianProcessRegressor(kernel=ker, alpha=1 ** 2)  #optimizer=None)
         self.x_h = list()
         self.y_h = list()
         self.x_p = list()
@@ -75,14 +76,13 @@ class PSOEnvironment(gym.Env):
         self.mu_best = [0, 0]
         self.n_data = 1
         self.num = 0
-        self.initial_seed = initial_seed
-        self.seed = self.initial_seed
+        self.seed = initial_seed
         self.mu = []
         self.sigma = []
         self.g = 0
         self.post_array = np.array([1, 1, 1, 1])
         self.distances = np.zeros(4)
-        self.lam = 0.6
+        self.lam = 0.3
         self.part_ant = np.zeros((1, 8))
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
         self.MSE_data = list()
@@ -100,12 +100,15 @@ class PSOEnvironment(gym.Env):
             self.state = np.zeros((6, self.xs, self.ys))
 
         self.grid_or = Map(self.xs, ys).black_white()
+
         self.grid_min, self.grid_max, self.grid_max_x, self.grid_max_y = Map(self.xs, ys).map_values()
-        self.pmin = self.grid_min
-        self.pmax = self.grid_max
+        self.pmin = 0
+        self.pmax = ys
 
         self.df_bounds, self.X_test = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
         self.secure, self.df_bounds = Bounds(self.resolution, self.xs, self.ys).interest_area()
+        #self.secure = navigation_map
+        #print(self.secure)
 
         self.bench_function = []
 
@@ -263,7 +266,7 @@ class PSOEnvironment(gym.Env):
         self.generatePart()
         self.tool()
         #np.random.seed()
-        random.seed()
+        random.seed(20)
         self.swarm()
         self.statistic()
         action = [3.1286, 2.568, 0.79, 0]
@@ -628,7 +631,7 @@ class PSOEnvironment(gym.Env):
 
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
         #print(self.logbook.stream)
-        if np.mean(self.distances) >= 250:
+        if np.mean(self.distances) >= 200:
             done = True
         else:
             done = False

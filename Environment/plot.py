@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as ticker
+from scipy import interpolate
+from matplotlib.collections import LineCollection
+from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 
 class Plots():
@@ -73,20 +76,25 @@ class Plots():
         Z_var, Z_mean = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).Z_var_mean(mu, sigma)
 
         fig, axs = plt.subplots(2, 1, figsize=(5, 10))
+        print(int((part_ant[:,0].shape)[0]))
 
-        im1 = axs[0].scatter(x_ga, y_ga, c=n, cmap="gist_rainbow", marker='.')
-        p1x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 0]))
-        p1y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 1]))
-        axs[0].plot(p1x, p1y, 'r')
-        p2x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 2]))
-        p2y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 3]))
-        axs[0].plot(p2x, p2y, 'w')
-        p3x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 4]))
-        p3y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 5]))
-        axs[0].plot(p3x, p3y, 'c')
-        p4x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 6]))
-        p4y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 7]))
-        axs[0].plot(p4x, p4y, 'k')
+        self.plot_trajectory(axs[0], part_ant[:, 0], part_ant[:, 1], z=None, colormap='Reds_r', num_of_points=int((part_ant[:,0].shape)[0]))
+        self.plot_trajectory(axs[0], part_ant[:, 2], part_ant[:, 3], z=None, colormap='Blues_r', num_of_points=int((part_ant[:,0].shape)[0]))
+        self.plot_trajectory(axs[0], part_ant[:, 4], part_ant[:, 5], z=None, colormap='Greens_r', num_of_points=int((part_ant[:,0].shape)[0]))
+        self.plot_trajectory(axs[0], part_ant[:, 6], part_ant[:, 7], z=None, colormap='Oranges_r', num_of_points=int((part_ant[:,0].shape)[0]))
+        #im1 = axs[0].scatter(x_ga, y_ga, c=n, cmap="gist_rainbow", marker='.')
+        #p1x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 0]))
+        #p1y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 1]))
+        #axs[0].plot(p1x, p1y, 'r')
+        #p2x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 2]))
+        #p2y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 3]))
+        #axs[0].plot(p2x, p2y, 'w')
+        #p3x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 4]))
+        #p3y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 5]))
+        #axs[0].plot(p3x, p3y, 'c')
+        #p4x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 6]))
+        #p4y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 7]))
+        #axs[0].plot(p4x, p4y, 'k')
 
         im2 = axs[0].imshow(Z_var.T, interpolation='bilinear', origin='lower', cmap="viridis")
         #plt.colorbar(im2, ax=axs[0], label='σ', shrink=1.0)
@@ -127,7 +135,7 @@ class Plots():
     def benchmark(self):
         plot, benchmark_plot = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).bench_plot()
 
-        fig = plt.figure(2)
+        fig = plt.figure(3)
         ax1 = fig.add_subplot(121)
         im4 = ax1.imshow(benchmark_plot, interpolation='bilinear', origin='lower', cmap="jet")
         plt.colorbar(im4, label='µ', shrink=0.74)
@@ -147,7 +155,7 @@ class Plots():
         return plot
 
     def error(self, MSE_data, it):
-        plt.figure(3)
+        plt.figure(4)
         plt.plot(it, MSE_data, '-')
         plt.xlabel("Iterations")
         plt.ylabel("MSE")
@@ -155,3 +163,28 @@ class Plots():
         plt.title("Mean Square Error")
         # plt.savefig("MSE", dpi=200)
         plt.show()
+
+    def plot_trajectory(self, ax, x, y, z=None, colormap='jet', num_of_points=None, linewidth=1, k=3, plot_waypoints=True,
+                        markersize=0.5):
+
+        if z is None:
+            tck, u = interpolate.splprep([x, y], s=0.0, k=k)
+            x_i, y_i = interpolate.splev(np.linspace(0, 1, num_of_points), tck)
+            points = np.array([x_i, y_i]).T.reshape(-1, 1, 2)
+            segments = np.concatenate([points[:-2], points[1:-1], points[2:]], axis=1)
+            lc = LineCollection(segments, norm=plt.Normalize(0, 1), cmap=plt.get_cmap(colormap), linewidth=linewidth)
+            lc.set_array(np.linspace(0, 1, len(x_i)))
+            ax.add_collection(lc)
+            if plot_waypoints:
+                ax.plot(x, y, '.', color='black', markersize=markersize)
+        else:
+            tck, u = interpolate.splprep([x, y, z], s=0.0)
+            x_i, y_i, z_i = interpolate.splev(np.linspace(0, 1, num_of_points), tck)
+            points = np.array([x_i, y_i, z_i]).T.reshape(-1, 1, 3)
+            segments = np.concatenate([points[:-2], points[1:-1], points[2:]], axis=1)
+            lc = Line3DCollection(segments, norm=plt.Normalize(0, 1), cmap=plt.get_cmap(colormap), linewidth=linewidth)
+            lc.set_array(np.linspace(0, 1, len(x_i)))
+            ax.add_collection(lc)
+            ax.scatter(x, y, z, 'k')
+            if plot_waypoints:
+                ax.plot(x, y, 'kx')

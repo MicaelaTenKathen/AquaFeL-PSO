@@ -21,6 +21,7 @@ GEN: maximum number of code iterations
 resolution = 1
 xs = 100
 ys = 150
+navigation_map = np.genfromtxt('Image/ypacarai_map_bigger.csv')
 
 # Map
 
@@ -51,7 +52,7 @@ start_time = time.time()
 # PSO initialization
 
 method = 0
-pso = PSOEnvironment(resolution, ys, method, reward_function='inc_mse')
+pso = PSOEnvironment(resolution, ys, method, navigation_map, reward_function='inc_mse')
 
 
 # Gaussian process initialization
@@ -62,7 +63,7 @@ import matplotlib.pyplot as plt
 
 mse_vec = []
 
-for i in range(5):
+for i in range(1):
 
     done = False
     state = pso.reset()
@@ -86,9 +87,13 @@ for i in range(5):
 
 plt.grid()
 plt.show()
-"""
+
+
+
+x_g, y_g,n,X_test,secure,bench_function,grid_min,sigma, \
+           mu, MSE_data, it,part_ant = pso.data_out()
 plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
 plot.gaussian(x_g, y_g, n, mu, sigma, part_ant)
-plot.benchmark()
+#plot.benchmark()
 plot.error(MSE_data, it)
-"""
+
