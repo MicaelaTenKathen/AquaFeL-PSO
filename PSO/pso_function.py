@@ -39,7 +39,8 @@ def createPart():
 
 class PSOEnvironment(gym.Env):
 
-    def __init__(self, resolution, ys, method, navigation_map, reward_function='mse', initial_seed=0, behavioral_method=0):
+    def __init__(self, resolution, ys, method, navigation_map, initial_seed, initial_position, reward_function='mse', behavioral_method=0):
+        self.navigation_map = navigation_map
         self.f = int()
         self.k = int()
         self.population = 4
@@ -93,6 +94,7 @@ class PSOEnvironment(gym.Env):
         self.array_part = np.zeros((1, 8))
         self.reward_function = reward_function
         self.behavioral_method = behavioral_method
+        self.initial_position = initial_position
 
         if self.method == 0:
             self.state = np.zeros(22, )
@@ -104,6 +106,8 @@ class PSOEnvironment(gym.Env):
         self.grid_min, self.grid_max, self.grid_max_x, self.grid_max_y = Map(self.xs, ys).map_values()
         self.pmin = 0
         self.pmax = ys
+
+        self.p = 0
 
         self.df_bounds, self.X_test = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
         self.secure, self.df_bounds = Bounds(self.resolution, self.xs, self.ys).interest_area()
@@ -126,11 +130,13 @@ class PSOEnvironment(gym.Env):
         """
         Generates a random position and a random speed for the particles (drones).
         """
-
-        part = creator.Particle([random.uniform(self.pmin, self.pmax) for _ in range(self.size)])
+        print(self.p)
+        part = creator.Particle([self.initial_position[self.p, i] for i in range(self.size)])
         part.speed = np.array([random.uniform(self.smin, self.smax) for _ in range(self.size)])
         part.smin = self.smin
         part.smax = self.smax
+        self.p += 1
+
 
         return part
 
@@ -171,7 +177,6 @@ class PSOEnvironment(gym.Env):
         """
         The operators are registered in the toolbox with their parameters.
         """
-
         self.toolbox = base.Toolbox()
         self.toolbox.register("particle", self.generatePart)
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.particle)
@@ -186,6 +191,7 @@ class PSOEnvironment(gym.Env):
         """
         toolbox = self.tool()
         self.pop = toolbox.population(n=self.population)
+        print(self.pop)
         self.best = self.pop[0]
 
         return self.best, self.pop
@@ -239,7 +245,6 @@ class PSOEnvironment(gym.Env):
         self.n_data = 1
         self.mu = []
         self.sigma = []
-        self.g = 0
         self.post_array = np.array([1, 1, 1, 1])
         self.distances = np.zeros(4)
         self.part_ant = np.zeros((1, 8))
@@ -258,24 +263,20 @@ class PSOEnvironment(gym.Env):
         self.bench_function = []
 
         self.num += 1
-        self.bench_function = Benchmark_function_reset(self.grid_or,
-                                                       self.resolution, self.xs, self.ys,
-                                                       w_ostacles=False, obstacles_on=False, randomize_shekel=True,
-                                                       sensor="", no_maxima=10,
-                                                       file=0).create_new_map()
+        self.bench_function = Benchmark_function_reset(self.grid_or, self.resolution, self.xs, self.ys,
+                                                       self.navigation_map, self.seed).create_new_map()
         self.generatePart()
         self.tool()
         #np.random.seed()
-        random.seed(20)
+        random.seed(self.seed)
         self.swarm()
         self.statistic()
-        action = [3.1286, 2.568, 0.79, 0]
         self.g = 0
         self.distances = np.zeros(4)
-        self.initcode(action)
+        self.state = self.initcode()
         return self.state
 
-    def pso_fitness(self, part, first=False):
+    def pso_fitness(self, part):
 
         """
         Obtains the local best (part.best) of each particle (drone) and the global best (best) of the swarm (fleet).
@@ -306,32 +307,9 @@ class PSOEnvironment(gym.Env):
                 self.ngp.append(self.n_data)
                 self.fitness.append(part.fitness.values)
         else:
-            self.x_p.append(part[0])
-            self.y_p.append(part[1])
-            self.y_data.append(part.fitness.values)
-            if first:
-                x_gap = int(part[0]) + abs(self.grid_min)
-                y_gap = int(part[1]) + abs(self.grid_min)
-                self.x_g.append(x_gap)
-                self.y_g.append(y_gap)
-                self.n.append(self.n_data)
-                if self.n_plot > 4:
-                    self.n_plot = float(1)
+            if part.best.fitness < part.fitness:
                 part.best = creator.Particle(part)
                 part.best.fitness.values = part.fitness.values
-            else:
-                if np.mean(self.distances) >= 249:
-                    x_gap = int(part[0]) + abs(self.grid_min)
-                    y_gap = int(part[1]) + abs(self.grid_min)
-                    self.x_g.append(x_gap)
-                    self.y_g.append(y_gap)
-                    self.n.append(self.n_data)
-                    self.n_plot += float(1)
-                    if self.n_plot > 4:
-                        self.n_plot = float(1)
-                if part.best.fitness < part.fitness:
-                    part.best = creator.Particle(part)
-                    part.best.fitness.values = part.fitness.values
             if self.best.fitness < part.fitness:
                 best = creator.Particle(part)
                 best.fitness.values = part.fitness.values
@@ -404,12 +382,11 @@ class PSOEnvironment(gym.Env):
             reward = self.MSE_data[-2] - self.MSE_data[-1]
         return reward
 
-    def initcode(self, action):
+    def initcode(self):
 
         """
         The output "out" of the method "initcode" is the positions of the particles (drones) after the first update of the
         gaussian process (initial state).
-
         method = 0 -> out = scalar vector
         out = [px_1, py_1, px_2, py_2, px_3, py_3, px_4, py_4, lbx_1, lby_1, lbx_2, lby_2, lbx_3, lby_3, lbx_4, lby_4, gbx, gby,
                sbx, sgy, mbx, mby]
@@ -424,9 +401,7 @@ class PSOEnvironment(gym.Env):
                sby: y coordinate of the sigma best (maximum uncertainty)
                mbx: x coordinate of the mean best (maximum contamination)
                mby: y coordinate of the mean best (maximum contamination)
-
         method = 1 -> out = images
-
         :param c1: weight that determinate the importance of the local best component
         :param c2: weight that determinate the importance of the global best component
         :param c3: weight that determinate the importance of the maximum uncertainty component
@@ -438,85 +413,56 @@ class PSOEnvironment(gym.Env):
         """
 
         for part in self.pop:
-            self.ok, part = self.pso_fitness(part, first=True)
+
+            part, self.s_n = Limits(self.secure, self.xs, self.ys).new_limit(self.g, part, self.s_n, self.n_data,
+                                                                             self.s_ant, self.part_ant)
+            self.x_bench = int(part[0])
+            self.y_bench = int(part[1])
+
+            for i in range(len(self.X_test)):
+                if self.X_test[i][0] == self.x_bench and self.X_test[i][1] == self.y_bench:
+                    part.fitness.values = [self.bench_function[i]]
+                    break
+
+            self.x_p.append(part[0])
+            self.y_p.append(part[1])
+            self.y_data.append(part.fitness.values)
+            self.n.append(self.n_data)
+
+            if self.n_plot > 4:
+                self.n_plot = float(1)
+
+            part.best = creator.Particle(part)
+            part.best.fitness.values = part.fitness.values
+
+            if self.best.fitness < part.fitness:
+                best = creator.Particle(part)
+                best.fitness.values = part.fitness.values
 
             self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant,
                                                                     self.distances, self.array_part, dfirst=True)
+
+            self.x_h.append(int(part[0]))
+            self.y_h.append(int(part[1]))
+            self.ngp.append(self.n_data)
+            self.fitness.append(part.fitness.values)
+
+            self.post_array = self.gp_regression()
+
+            self.samples += 1
 
             self.n_data += 1
             if self.n_data > 4:
                 self.n_data = 1
 
-        for part in self.pop:
-            self.toolbox.update(action[0], action[1], action[2], action[3], part)
+        self.MSE_data, self.it = self.util.mse(self.g, self.fitness, self.mu_data, self.samples)
 
-        while self.k == 0:
-            for part in self.pop:
+        self.sigma_best, self.mu_best = self.sigma_max()
 
-                self.ok, part = self.pso_fitness(part, first=False)
+        self.return_state()
 
-                self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant,
-                                                                        self.distances, self.array_part, dfirst=False)
-
-                self.n_data += 1
-                if self.n_data > 4:
-                    self.n_data = 1
-
-            if (np.mean(self.distances) - self.last_sample) >= (np.min(self.post_array) * self.lam):
-                self.ok = True
-                self.last_sample = np.mean(self.distances)
-
-                for part in self.pop:
-
-                    self.ok, part = self.pso_fitness(part, first=False)
-
-                    self.post_array = self.gp_regression()
-
-                    self.samples += 1
-
-                    self.n_data += 1
-                    if self.n_data > 4:
-                        self.n_data = 1
-
-                self.MSE_data, self.it = self.util.mse(self.g, self.fitness, self.mu_data, self.samples)
-
-                self.sigma_best, self.mu_best = self.sigma_max()
-
-            z = 0
-
-            for part in self.pop:
-                self.toolbox.update(action[0], action[1], action[2], action[3], part)
-                if self.ok:
-                    self.state = np.array(self.state)
-                    if self.method == 0:
-                        self.state[z] = part[0]
-                        z += 1
-                        self.state[z] = part[1]
-                        z += 1
-                        self.state[z + 6] = part.best[0]
-                        self.state[z + 7] = part.best[1]
-                        if self.n_data == 4:
-                            self.state[16] = self.best[0]
-                            self.state[17] = self.best[1]
-                            self.state[18] = self.sigma_best[0]
-                            self.state[19] = self.sigma_best[1]
-                            self.state[20] = self.mu_best[0]
-                            self.state[21] = self.mu_best[1]
-                    else:
-                        posx = 2 * z
-                        posy = (2 * z) + 1
-                        self.state = self.plot.part_position(self.part_ant[:, posx], self.part_ant[:, posy], self.state,
-                                                             z)
-                        z += 1
-                        if self.n_data == 4:
-                            self.state = self.plot.state_sigma_mu(self.mu, self.sigma, self.state)
-                    self.n_data += 1
-                    if self.n_data > 4:
-                        self.n_data = 1
-            self.g += 1
-            if self.ok:
-                self.k += 1
-                self.ok = False
+        self.k = 4
+        self.ok = False
 
         return self.state
 
@@ -552,7 +498,6 @@ class PSOEnvironment(gym.Env):
         :param post_array: refers to the posterior length scale of the surrogate model [Equation 7
         (https://doi.org/10.3390/electronics10131605)]
         """
-
         dis_steps = 0
         dist_ant = np.mean(self.distances)
         self.n_data = 1
@@ -561,7 +506,10 @@ class PSOEnvironment(gym.Env):
         while dis_steps < 10:
 
             for part in self.pop:
-                self.ok, part = self.pso_fitness(part, first=False)
+                self.toolbox.update(action[0], action[1], action[2], action[3], part)
+
+            for part in self.pop:
+                self.ok, part = self.pso_fitness(part)
                 self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant,
                                                                         self.distances, self.array_part, dfirst=False)
 
@@ -575,7 +523,7 @@ class PSOEnvironment(gym.Env):
                 self.last_sample = np.mean(self.distances)
 
                 for part in self.pop:
-                    self.ok, part = self.pso_fitness(part, first=False)
+                    self.ok, part = self.pso_fitness(part)
 
                     self.post_array = self.gp_regression()
 
@@ -592,13 +540,24 @@ class PSOEnvironment(gym.Env):
 
                 self.ok = False
 
-            for part in self.pop:
-                self.toolbox.update(action[0], action[1], action[2], action[3], part)
-
             dis_steps = np.mean(self.distances) - dist_ant
 
             self.g += 1
 
+        self.return_state()
+
+        reward = self.calculate_reward()
+
+        self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
+        #print(self.logbook.stream)
+        if ((self.distances) >= 150).any():
+            done = True
+        else:
+            done = False
+
+        return self.state, reward, done, {}
+
+    def return_state(self):
         z = 0
         for part in self.pop:
             self.state = self.state
@@ -626,20 +585,6 @@ class PSOEnvironment(gym.Env):
             self.n_data += 1
             if self.n_data > 4:
                 self.n_data = 1
-
-        reward = self.calculate_reward()
-
-        self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
-        #print(self.logbook.stream)
-        if np.mean(self.distances) >= 200:
-            done = True
-        else:
-            done = False
-
-        return self.state, reward, done, {}
-
-    def iteration(self):
-        return self.g
 
     def data_out(self):
 

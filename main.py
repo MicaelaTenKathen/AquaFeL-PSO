@@ -4,6 +4,7 @@ from Environment.plot import Plots
 import time
 from warnings import simplefilter
 from sklearn.exceptions import ConvergenceWarning
+
 simplefilter("ignore", category=ConvergenceWarning)
 
 from PSO.pso_function import PSOEnvironment
@@ -47,13 +48,18 @@ df_bounds: data of the limits of the surface where the drone can travel
 
 
 action = np.array([3.1286, 2.568, 0.79, 0])
+initial_position = np.array([[0, 0],
+                             [8, 56],
+                             [37, 16],
+                             [80, 81],
+                             [74, 124]])
 start_time = time.time()
 
 # PSO initialization
 
 method = 0
-pso = PSOEnvironment(resolution, ys, method, navigation_map, reward_function='inc_mse')
-
+pso = PSOEnvironment(resolution, ys, method, navigation_map, initial_seed=874987, initial_position=initial_position,
+                     reward_function='inc_mse')
 
 # Gaussian process initialization
 
@@ -72,12 +78,9 @@ for i in range(1):
     # Main part of the code
 
     while not done:
-
         state, reward, done, dic = pso.step(action)
 
         R_vec.append(-reward)
-
-
 
     print('Time', time.time() - start_time)
 
@@ -88,12 +91,9 @@ for i in range(1):
 plt.grid()
 plt.show()
 
-
-
-x_g, y_g,n,X_test,secure,bench_function,grid_min,sigma, \
-           mu, MSE_data, it,part_ant = pso.data_out()
+x_g, y_g, n, X_test, secure, bench_function, grid_min, sigma, \
+mu, MSE_data, it, part_ant = pso.data_out()
 plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
 plot.gaussian(x_g, y_g, n, mu, sigma, part_ant)
-#plot.benchmark()
+plot.benchmark()
 plot.error(MSE_data, it)
-

@@ -75,13 +75,13 @@ class Plots():
     def gaussian(self, x_ga, y_ga, n, mu, sigma, part_ant):
         Z_var, Z_mean = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).Z_var_mean(mu, sigma)
 
-        fig, axs = plt.subplots(2, 1, figsize=(5, 10))
+        fig, axs = plt.subplots(1, 2, figsize=(5, 10))
         print(int((part_ant[:,0].shape)[0]))
 
-        self.plot_trajectory(axs[0], part_ant[:, 0], part_ant[:, 1], z=None, colormap='Reds_r', num_of_points=int((part_ant[:,0].shape)[0]))
-        self.plot_trajectory(axs[0], part_ant[:, 2], part_ant[:, 3], z=None, colormap='Blues_r', num_of_points=int((part_ant[:,0].shape)[0]))
-        self.plot_trajectory(axs[0], part_ant[:, 4], part_ant[:, 5], z=None, colormap='Greens_r', num_of_points=int((part_ant[:,0].shape)[0]))
-        self.plot_trajectory(axs[0], part_ant[:, 6], part_ant[:, 7], z=None, colormap='Oranges_r', num_of_points=int((part_ant[:,0].shape)[0]))
+        self.plot_trajectory(axs[0], part_ant[:, 0], part_ant[:, 1], z=None, colormap='Reds_r', num_of_points=(int((part_ant[:,0].shape)[0])*10))
+        self.plot_trajectory(axs[0], part_ant[:, 2], part_ant[:, 3], z=None, colormap='Blues_r', num_of_points=(int((part_ant[:,0].shape)[0])*10))
+        self.plot_trajectory(axs[0], part_ant[:, 4], part_ant[:, 5], z=None, colormap='Greens_r', num_of_points=(int((part_ant[:,0].shape)[0])*10))
+        self.plot_trajectory(axs[0], part_ant[:, 6], part_ant[:, 7], z=None, colormap='Oranges_r', num_of_points=(int((part_ant[:,0].shape)[0])*10))
         #im1 = axs[0].scatter(x_ga, y_ga, c=n, cmap="gist_rainbow", marker='.')
         #p1x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 0]))
         #p1y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 1]))
@@ -149,8 +149,6 @@ class Plots():
 
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         ax1.yaxis.set_major_formatter(ticks_y)
-
-        plt.savefig("Image/plot9.pdf")
 
         return plot
 
