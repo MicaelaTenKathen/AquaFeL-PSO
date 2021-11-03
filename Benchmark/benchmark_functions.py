@@ -162,7 +162,6 @@ class Benchmark_function_reset():
         return np.nan if self.w_obstacles and sol[2] == 1 else benchmarks.schwefel(sol[:2])[0]
 
     def create_new_map(self):
-        self.seed += 1
         self.w_obstacles = self.obstacles_on
         xmin = -5
         xmax = 5

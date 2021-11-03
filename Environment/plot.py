@@ -135,7 +135,7 @@ class Plots():
     def benchmark(self):
         plot, benchmark_plot = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).bench_plot()
 
-        fig = plt.figure(3)
+        fig = plt.figure()
         ax1 = fig.add_subplot(121)
         im4 = ax1.imshow(benchmark_plot, interpolation='bilinear', origin='lower', cmap="jet")
         plt.colorbar(im4, label='µ', shrink=0.74)

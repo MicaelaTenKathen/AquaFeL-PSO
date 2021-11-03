@@ -51,7 +51,7 @@ action = np.array([3.1286, 2.568, 0.79, 0])
 initial_position = np.array([[0, 0],
                              [8, 56],
                              [37, 16],
-                             [80, 81],
+                             [78, 81],
                              [74, 124]])
 start_time = time.time()
 
@@ -69,7 +69,8 @@ import matplotlib.pyplot as plt
 
 mse_vec = []
 
-for i in range(1):
+
+for i in range(5):
 
     done = False
     state = pso.reset()
@@ -84,16 +85,17 @@ for i in range(1):
 
     print('Time', time.time() - start_time)
 
-    x_g, y_g, n, X_test, secure, bench_function, grid_min, sigma, mu, MSE_data, it, part_ant = pso.data_out()
-
     plt.plot(R_vec)
+
 
 plt.grid()
 plt.show()
 
+"""
 x_g, y_g, n, X_test, secure, bench_function, grid_min, sigma, \
 mu, MSE_data, it, part_ant = pso.data_out()
 plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
 plot.gaussian(x_g, y_g, n, mu, sigma, part_ant)
 plot.benchmark()
 plot.error(MSE_data, it)
+"""

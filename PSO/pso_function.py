@@ -107,7 +107,7 @@ class PSOEnvironment(gym.Env):
         self.pmin = 0
         self.pmax = ys
 
-        self.p = 0
+        self.p = 1
 
         self.df_bounds, self.X_test = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
         self.secure, self.df_bounds = Bounds(self.resolution, self.xs, self.ys).interest_area()
@@ -244,6 +244,7 @@ class PSOEnvironment(gym.Env):
         self.mu_best = [0, 0]
         self.n_data = 1
         self.mu = []
+        self.p = 0
         self.sigma = []
         self.post_array = np.array([1, 1, 1, 1])
         self.distances = np.zeros(4)
@@ -254,6 +255,7 @@ class PSOEnvironment(gym.Env):
         self.mse = float()
         self.duplicate = False
         self.array_part = np.zeros((1, 8))
+        self.seed += 1
 
         if self.method == 0:
             self.state = np.zeros(22, )
