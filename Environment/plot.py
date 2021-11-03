@@ -78,10 +78,10 @@ class Plots():
         fig, axs = plt.subplots(1, 2, figsize=(5, 10))
         print(int((part_ant[:,0].shape)[0]))
 
-        self.plot_trajectory(axs[0], part_ant[:, 0], part_ant[:, 1], z=None, colormap='Reds_r', num_of_points=(int((part_ant[:,0].shape)[0])*10))
-        self.plot_trajectory(axs[0], part_ant[:, 2], part_ant[:, 3], z=None, colormap='Blues_r', num_of_points=(int((part_ant[:,0].shape)[0])*10))
-        self.plot_trajectory(axs[0], part_ant[:, 4], part_ant[:, 5], z=None, colormap='Greens_r', num_of_points=(int((part_ant[:,0].shape)[0])*10))
-        self.plot_trajectory(axs[0], part_ant[:, 6], part_ant[:, 7], z=None, colormap='Oranges_r', num_of_points=(int((part_ant[:,0].shape)[0])*10))
+        self.plot_trajectory(axs[0], part_ant[:, 0], part_ant[:, 1], z=None, colormap='winter', num_of_points=(int((part_ant[:,0].shape)[0])*10))
+        self.plot_trajectory(axs[0], part_ant[:, 2], part_ant[:, 3], z=None, colormap='Wistia', num_of_points=(int((part_ant[:,0].shape)[0])*10))
+        self.plot_trajectory(axs[0], part_ant[:, 4], part_ant[:, 5], z=None, colormap='Purples', num_of_points=(int((part_ant[:,0].shape)[0])*10))
+        self.plot_trajectory(axs[0], part_ant[:, 6], part_ant[:, 7], z=None, colormap='Reds', num_of_points=(int((part_ant[:,0].shape)[0])*10))
         #im1 = axs[0].scatter(x_ga, y_ga, c=n, cmap="gist_rainbow", marker='.')
         #p1x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 0]))
         #p1y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 1]))
@@ -96,7 +96,7 @@ class Plots():
         #p4y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 7]))
         #axs[0].plot(p4x, p4y, 'k')
 
-        im2 = axs[0].imshow(Z_var.T, interpolation='bilinear', origin='lower', cmap="viridis")
+        im2 = axs[0].imshow(Z_var.T, interpolation='bilinear', origin='lower', cmap="gist_yarg")
         #plt.colorbar(im2, ax=axs[0], label='σ', shrink=1.0)
         # axs[0].set_xlabel("x [m]")
         axs[0].set_ylabel("y [m]")
