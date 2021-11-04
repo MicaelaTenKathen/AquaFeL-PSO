@@ -1,5 +1,3 @@
-from Benchmark.benchmark_functions import Benchmark_function
-from Environment.map import Map
 from Environment.plot import Plots
 import time
 from warnings import simplefilter
@@ -58,7 +56,7 @@ start_time = time.time()
 # PSO initialization
 
 method = 0
-pso = PSOEnvironment(resolution, ys, method, navigation_map, initial_seed=874987, initial_position=initial_position,
+pso = PSOEnvironment(resolution, ys, method, initial_seed=87498, initial_position=initial_position,
                      reward_function='inc_mse')
 
 # Gaussian process initialization
@@ -69,8 +67,7 @@ import matplotlib.pyplot as plt
 
 mse_vec = []
 
-
-for i in range(5):
+for i in range(2):
 
     done = False
     state = pso.reset()
@@ -87,15 +84,14 @@ for i in range(5):
 
     plt.plot(R_vec)
 
+    plt.grid()
+    plt.show()
 
-plt.grid()
-plt.show()
-
-"""
-x_g, y_g, n, X_test, secure, bench_function, grid_min, sigma, \
-mu, MSE_data, it, part_ant = pso.data_out()
-plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
-plot.gaussian(x_g, y_g, n, mu, sigma, part_ant)
-plot.benchmark()
-plot.error(MSE_data, it)
-"""
+    """
+    X_test, secure, bench_function, grid_min, sigma, \
+    mu, MSE_data, it, part_ant, y_data = pso.data_out()
+    plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
+    plot.gaussian(mu, sigma, part_ant)
+    plot.benchmark()
+    plot.error(MSE_data, it)
+    """

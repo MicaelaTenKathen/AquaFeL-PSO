@@ -8,7 +8,8 @@ class Utils:
         self.MSE_data = list()
         self.it = list()
 
-    def distance_part(self, g, n_data, part, part_ant, distances, array_part, dfirst=False):
+    @staticmethod
+    def distance_part(g, n_data, part, part_ant, distances, array_part, dfirst=False):
 
         """
         Calculates the distance between (x,y)^t and (x,y)^(t-1).

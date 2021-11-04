@@ -15,7 +15,6 @@ class Map():
         array = np.zeros((self.xs, self.ys))
         img = Image.new('RGB', (self.xs, self.ys))
         j = 0
-
         while j < self.ys:
             i = 0
             while i < self.xs:
@@ -33,6 +32,7 @@ class Map():
                 array[i, j] = int(bit)
                 i += 1
             j += 1
+
         return array
 
     def map_values(self):

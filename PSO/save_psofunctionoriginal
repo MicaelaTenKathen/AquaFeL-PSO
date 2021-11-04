@@ -1,46 +1,9 @@
-from Data.limits import Limits
-from Environment.plot import Plots
-from Environment.map import Map
-from Benchmark.benchmark_functions import Benchmark_function
-from Environment.bounds import Bounds
-from Data.utils import Utils
-
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF
-from sklearn.metrics import mean_squared_error
-
-import numpy as np
-import random
-import math
-import gym
-
-from deap import base
-from deap import creator
-from deap import tools
-
-import sys, os
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
-"""[https://deap.readthedocs.io/en/master/examples/pso_basic.html]"""
-
-
-def createPart():
-    """
-    Creation of the objects "FitnessMax" and "Particle"
-    """
-
-    creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-    creator.create("Particle", np.ndarray, fitness=creator.FitnessMax, speed=None, smin=None, smax=None,
-                   best=None)
-    creator.create("BestGP", np.ndarray, fitness=creator.FitnessMax)
-
-
 class PSOEnvironment(gym.Env):
 
-    def __init__(self, resolution, ys, method, initial_seed, initial_position, reward_function='mse', behavioral_method=0):
-        self.f = None
-        self.k = None
+    def __init__(self, resolution, ys, method, navigation_map, initial_seed, initial_position, reward_function='mse', behavioral_method=0):
+        self.navigation_map = navigation_map
+        self.f = int()
+        self.k = int()
         self.population = 4
         self.resolution = resolution
         self.smin = 0
@@ -52,23 +15,27 @@ class PSOEnvironment(gym.Env):
         self.ys = ys
         ker = RBF(length_scale=10, length_scale_bounds=(1e-1, 10))
         self.gpr = GaussianProcessRegressor(kernel=ker, alpha=1 ** 2)  #optimizer=None)
-        self.x_h = []
-        self.y_h = []
-        self.x_p = []
-        self.y_p = []
-        self.fitness = []
-        self.y_data = []
-        self.mu_data = []
-        self.sigma_data = []
-        self.x_bench = None
-        self.y_bench = None
+        self.x_h = list()
+        self.y_h = list()
+        self.x_p = list()
+        self.y_p = list()
+        self.fitness = list()
+        self.y_data = list()
+        self.mu_data = list()
+        self.sigma_data = list()
+        self.x_bench = int()
+        self.y_bench = int()
         self.n_plot = float(1)
         self.s_n = np.array([True, True, True, True])
         self.s_ant = np.zeros(4)
-        self.samples = None
-        self.dist_ant = None
-        self.sigma_best = []
-        self.mu_best = []
+        self.x_g = list()
+        self.y_g = list()
+        self.ngp = list()
+        self.n = list()
+        self.samples = int()
+        self.dist_ant = float()
+        self.sigma_best = [0, 0]
+        self.mu_best = [0, 0]
         self.n_data = 1
         self.num = 0
         self.seed = initial_seed
@@ -80,15 +47,16 @@ class PSOEnvironment(gym.Env):
         self.lam = 0.3
         self.part_ant = np.zeros((1, 8))
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
-        self.MSE_data = []
-        self.it = []
+        self.MSE_data = list()
+        self.it = list()
         self.method = method
-        self.mse = []
+        self.mse = float()
         self.duplicate = False
         self.array_part = np.zeros((1, 8))
         self.reward_function = reward_function
         self.behavioral_method = behavioral_method
         self.initial_position = initial_position
+
         if self.method == 0:
             self.state = np.zeros(22, )
         else:
@@ -107,7 +75,7 @@ class PSOEnvironment(gym.Env):
         #self.secure = navigation_map
         #print(self.secure)
 
-        self.bench_function = None
+        self.bench_function = []
 
         self.plot = Plots(self.xs, self.ys, self.X_test, self.secure, self.bench_function, self.grid_min)
 
@@ -123,11 +91,13 @@ class PSOEnvironment(gym.Env):
         """
         Generates a random position and a random speed for the particles (drones).
         """
+        print(self.p)
         part = creator.Particle([self.initial_position[self.p, i] for i in range(self.size)])
         part.speed = np.array([random.uniform(self.smin, self.smax) for _ in range(self.size)])
         part.smin = self.smin
         part.smax = self.smax
         self.p += 1
+
 
         return part
 
@@ -182,6 +152,7 @@ class PSOEnvironment(gym.Env):
         """
         toolbox = self.tool()
         self.pop = toolbox.population(n=self.population)
+        print(self.pop)
         self.best = self.pop[0]
 
         return self.best, self.pop
@@ -208,36 +179,30 @@ class PSOEnvironment(gym.Env):
         """
         Initialization of the pso.
         """
-        self.reset_variables()
-        self.bench_function = Benchmark_function(self.grid_or, self.resolution, self.xs, self.ys, self.seed).create_new_map()
-        self.generatePart()
-        self.tool()
-        random.seed(self.seed)
-        self.swarm()
-        self.statistic()
-        self.state = self.first_values()
-        return self.state
 
-    def reset_variables(self):
-        self.f = None
-        self.k = None
-        self.x_h.clear()
-        self.y_h.clear()
-        self.x_p.clear()
-        self.y_p.clear()
-        self.fitness.clear()
-        self.y_data.clear()
-        self.mu_data.clear()
-        self.sigma_data.clear()
-        self.x_bench = None
-        self.y_bench = None
+        self.f = int()
+        self.k = int()
+        self.x_h = list()
+        self.y_h = list()
+        self.x_p = list()
+        self.y_p = list()
+        self.fitness = list()
+        self.y_data = list()
+        self.mu_data = list()
+        self.sigma_data = list()
+        self.x_bench = int()
+        self.y_bench = int()
         self.n_plot = float(1)
         self.s_n = np.array([True, True, True, True])
         self.s_ant = np.zeros(4)
-        self.samples = None
-        self.dist_ant = None
-        self.sigma_best = []
-        self.mu_best = []
+        self.x_g = list()
+        self.y_g = list()
+        self.ngp = list()
+        self.n = list()
+        self.samples = int()
+        self.dist_ant = float()
+        self.sigma_best = [0, 0]
+        self.mu_best = [0, 0]
         self.n_data = 1
         self.mu = []
         self.p = 0
@@ -246,9 +211,9 @@ class PSOEnvironment(gym.Env):
         self.distances = np.zeros(4)
         self.part_ant = np.zeros((1, 8))
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
-        self.MSE_data.clear()
-        self.it.clear()
-        self.mse = []
+        self.MSE_data = list()
+        self.it = list()
+        self.mse = float()
         self.duplicate = False
         self.array_part = np.zeros((1, 8))
         self.seed += 1
@@ -258,9 +223,21 @@ class PSOEnvironment(gym.Env):
         else:
             self.state = np.zeros((6, self.xs, self.ys))
 
+        self.bench_function = []
+
         self.num += 1
+        self.bench_function = Benchmark_function_reset(self.grid_or, self.resolution, self.xs, self.ys,
+                                                       self.navigation_map, self.seed).create_new_map()
+        self.generatePart()
+        self.tool()
+        #np.random.seed()
+        random.seed(self.seed)
+        self.swarm()
+        self.statistic()
         self.g = 0
         self.distances = np.zeros(4)
+        self.state = self.initcode()
+        return self.state
 
     def pso_fitness(self, part):
 
@@ -273,8 +250,10 @@ class PSOEnvironment(gym.Env):
         self.x_bench = int(part[0])
         self.y_bench = int(part[1])
 
-        part.fitness.values = [self.bench_function[self.x_bench][self.y_bench]]
-
+        for i in range(len(self.X_test)):
+            if self.X_test[i][0] == self.x_bench and self.X_test[i][1] == self.y_bench:
+                part.fitness.values = [self.bench_function[i]]
+                break
         if self.ok:
             self.duplicate = False
             for i in range(len(self.x_h)):
@@ -288,6 +267,7 @@ class PSOEnvironment(gym.Env):
             else:
                 self.x_h.append(int(part[0]))
                 self.y_h.append(int(part[1]))
+                self.ngp.append(self.n_data)
                 self.fitness.append(part.fitness.values)
         else:
             if part.best.fitness < part.fitness:
@@ -365,7 +345,7 @@ class PSOEnvironment(gym.Env):
             reward = self.MSE_data[-2] - self.MSE_data[-1]
         return reward
 
-    def first_values(self):
+    def initcode(self):
 
         """
         The output "out" of the method "initcode" is the positions of the particles (drones) after the first update of the
@@ -402,7 +382,15 @@ class PSOEnvironment(gym.Env):
             self.x_bench = int(part[0])
             self.y_bench = int(part[1])
 
-            part.fitness.values = [self.bench_function[self.x_bench][self.y_bench]]
+            for i in range(len(self.X_test)):
+                if self.X_test[i][0] == self.x_bench and self.X_test[i][1] == self.y_bench:
+                    part.fitness.values = [self.bench_function[i]]
+                    break
+
+            self.x_p.append(part[0])
+            self.y_p.append(part[1])
+            self.y_data.append(part.fitness.values)
+            self.n.append(self.n_data)
 
             if self.n_plot > 4:
                 self.n_plot = float(1)
@@ -419,6 +407,7 @@ class PSOEnvironment(gym.Env):
 
             self.x_h.append(int(part[0]))
             self.y_h.append(int(part[1]))
+            self.ngp.append(self.n_data)
             self.fitness.append(part.fitness.values)
 
             self.post_array = self.gp_regression()
@@ -566,5 +555,5 @@ class PSOEnvironment(gym.Env):
         Return the first and the last position of the particles (drones).
         """
 
-        return self.X_test, self.secure, self.bench_function, self.grid_min, self.sigma, \
-               self.mu, self.MSE_data, self.it, self.part_ant, self.fitness
+        return self.x_g, self.y_g, self.n, self.X_test, self.secure, self.bench_function, self.grid_min, self.sigma, \
+               self.mu, self.MSE_data, self.it, self.part_ant

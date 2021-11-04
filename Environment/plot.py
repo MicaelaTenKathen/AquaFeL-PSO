@@ -4,6 +4,7 @@ import matplotlib.ticker as ticker
 from scipy import interpolate
 from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
+from Environment.map import Map
 
 
 class Plots():
@@ -14,6 +15,7 @@ class Plots():
         self.grid = grid
         self.bench_function = bench_function
         self.grid_min = grid_min
+        self.grid_or = Map(self.xs, ys).black_white()
 
     def Z_var_mean(self, mu, sigma):
         Z_un = np.zeros([self.grid.shape[0], self.grid.shape[1]])
@@ -21,10 +23,6 @@ class Plots():
         for i in range(len(self.X_test)):
             Z_un[self.X_test[i][0], self.X_test[i][1]] = sigma[i]
             Z_mean[self.X_test[i][0], self.X_test[i][1]] = mu[i]
-        with open('./Position/uncertainty.npy', 'wb') as g:
-            np.save(g, Z_un)
-        with open('./Position/mean.npy', 'wb') as o:
-            np.save(o, Z_mean)
         Z_un[Z_un == 0] = np.nan
         Z_mean[Z_mean == 0] = np.nan
         return Z_un, Z_mean
@@ -39,14 +37,16 @@ class Plots():
         #     np.save(o, Z_mean)
         return state
 
-    def part_position(self, array_position_x, array_position_y, state, z):
+    @staticmethod
+    def part_position(array_position_x, array_position_y, state, z):
         for i in range(len(array_position_x)):
             state[z, int(array_position_x[i]), int(array_position_y[i])] = 1
         # with open('./Position/position' + str(n_data) + '.npy', 'wb') as g:
         #     np.save(g, position)
         return state
 
-    def evolucion(self, log):
+    @staticmethod
+    def evolucion(log):
         gen = log.select("gen")
         fit_mins = log.select("min")
         fit_maxs = log.select("max")
@@ -72,11 +72,10 @@ class Plots():
         benchma_plot = plot.T
         return plot, benchma_plot
 
-    def gaussian(self, x_ga, y_ga, n, mu, sigma, part_ant):
+    def gaussian(self, mu, sigma, part_ant):
         Z_var, Z_mean = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).Z_var_mean(mu, sigma)
 
         fig, axs = plt.subplots(1, 2, figsize=(5, 10))
-        print(int((part_ant[:,0].shape)[0]))
 
         self.plot_trajectory(axs[0], part_ant[:, 0], part_ant[:, 1], z=None, colormap='winter', num_of_points=(int((part_ant[:,0].shape)[0])*10))
         self.plot_trajectory(axs[0], part_ant[:, 2], part_ant[:, 3], z=None, colormap='Wistia', num_of_points=(int((part_ant[:,0].shape)[0])*10))
@@ -133,11 +132,11 @@ class Plots():
         plt.show()
 
     def benchmark(self):
-        plot, benchmark_plot = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).bench_plot()
-
+        plot_bench = np.copy(self.bench_function)
+        plot_bench[self.grid == 0] = np.nan
         fig = plt.figure()
         ax1 = fig.add_subplot(121)
-        im4 = ax1.imshow(benchmark_plot, interpolation='bilinear', origin='lower', cmap="jet")
+        im4 = ax1.imshow(plot_bench.T, interpolation='bilinear', origin='lower', cmap="jet")
         plt.colorbar(im4, label='µ', shrink=0.74)
         ax1.set_xlabel("x [m]")
         ax1.set_ylabel("y [m]")
@@ -149,11 +148,11 @@ class Plots():
 
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         ax1.yaxis.set_major_formatter(ticks_y)
+        plt.show()
 
-        return plot
-
-    def error(self, MSE_data, it):
-        plt.figure(4)
+    @staticmethod
+    def error(MSE_data, it):
+        plt.figure()
         plt.plot(it, MSE_data, '-')
         plt.xlabel("Iterations")
         plt.ylabel("MSE")
@@ -162,7 +161,8 @@ class Plots():
         # plt.savefig("MSE", dpi=200)
         plt.show()
 
-    def plot_trajectory(self, ax, x, y, z=None, colormap='jet', num_of_points=None, linewidth=1, k=3, plot_waypoints=True,
+    @staticmethod
+    def plot_trajectory(ax, x, y, z=None, colormap='jet', num_of_points=None, linewidth=1, k=3, plot_waypoints=True,
                         markersize=0.5):
 
         if z is None:
