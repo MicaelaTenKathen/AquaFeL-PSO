@@ -96,9 +96,7 @@ class PSOEnvironment(gym.Env):
 
         self.grid_or = Map(self.xs, ys).black_white()
 
-        self.grid_min, self.grid_max, self.grid_max_x, self.grid_max_y = Map(self.xs, ys).map_values()
-        self.pmin = 0
-        self.pmax = ys
+        self.grid_min, self.grid_max, self.grid_max_x, self.grid_max_y = 0, self.ys, self.xs, self.ys
 
         self.p = 1
 
@@ -268,27 +266,10 @@ class PSOEnvironment(gym.Env):
         Obtains the local best (part.best) of each particle (drone) and the global best (best) of the swarm (fleet).
         """
 
-        part, self.s_n = Limits(self.secure, self.xs, self.ys).new_limit(self.g, part, self.s_n, self.n_data,
-                                                                         self.s_ant, self.part_ant)
-        self.x_bench = int(part[0])
-        self.y_bench = int(part[1])
-
-        part.fitness.values = [self.bench_function[self.x_bench][self.y_bench]]
+        part.fitness.values = self.new_fitness(part)
 
         if self.ok:
-            self.duplicate = False
-            for i in range(len(self.x_h)):
-                if self.x_h[i] == self.x_bench and self.y_h[i] == self.y_bench:
-                    self.duplicate = True
-                    break
-                else:
-                    self.duplicate = False
-            if self.duplicate:
-                pass
-            else:
-                self.x_h.append(int(part[0]))
-                self.y_h.append(int(part[1]))
-                self.fitness.append(part.fitness.values)
+            self.check_duplicate(part)
         else:
             if part.best.fitness < part.fitness:
                 part.best = creator.Particle(part)
@@ -298,6 +279,15 @@ class PSOEnvironment(gym.Env):
                 best.fitness.values = part.fitness.values
 
         return self.ok, part
+
+    def new_fitness(self, part):
+        part, self.s_n = Limits(self.secure, self.xs, self.ys).new_limit(self.g, part, self.s_n, self.n_data,
+                                                                         self.s_ant, self.part_ant)
+        self.x_bench = int(part[0])
+        self.y_bench = int(part[1])
+
+        new_fitness_value = [self.bench_function[self.x_bench][self.y_bench]]
+        return new_fitness_value
 
     def gp_regression(self):
 
@@ -365,6 +355,21 @@ class PSOEnvironment(gym.Env):
             reward = self.MSE_data[-2] - self.MSE_data[-1]
         return reward
 
+    def check_duplicate(self, part):
+        self.duplicate = False
+        for i in range(len(self.x_h)):
+            if self.x_h[i] == self.x_bench and self.y_h[i] == self.y_bench:
+                self.duplicate = True
+                break
+            else:
+                self.duplicate = False
+        if self.duplicate:
+            pass
+        else:
+            self.x_h.append(int(part[0]))
+            self.y_h.append(int(part[1]))
+            self.fitness.append(part.fitness.values)
+
     def first_values(self):
 
         """
@@ -397,12 +402,7 @@ class PSOEnvironment(gym.Env):
 
         for part in self.pop:
 
-            part, self.s_n = Limits(self.secure, self.xs, self.ys).new_limit(self.g, part, self.s_n, self.n_data,
-                                                                             self.s_ant, self.part_ant)
-            self.x_bench = int(part[0])
-            self.y_bench = int(part[1])
-
-            part.fitness.values = [self.bench_function[self.x_bench][self.y_bench]]
+            part.fitness.values = self.new_fitness(part)
 
             if self.n_plot > 4:
                 self.n_plot = float(1)
@@ -417,9 +417,7 @@ class PSOEnvironment(gym.Env):
             self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant,
                                                                     self.distances, self.array_part, dfirst=True)
 
-            self.x_h.append(int(part[0]))
-            self.y_h.append(int(part[1]))
-            self.fitness.append(part.fitness.values)
+            self.check_duplicate(part)
 
             self.post_array = self.gp_regression()
 

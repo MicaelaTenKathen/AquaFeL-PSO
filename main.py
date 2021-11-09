@@ -56,7 +56,7 @@ start_time = time.time()
 # PSO initialization
 
 method = 0
-pso = PSOEnvironment(resolution, ys, method, initial_seed=87498, initial_position=initial_position,
+pso = PSOEnvironment(resolution, ys, method, initial_seed=101, initial_position=initial_position,
                      reward_function='inc_mse')
 
 # Gaussian process initialization
@@ -67,7 +67,7 @@ import matplotlib.pyplot as plt
 
 mse_vec = []
 
-for i in range(2):
+for i in range(5):
 
     done = False
     state = pso.reset()
