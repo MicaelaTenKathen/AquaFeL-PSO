@@ -56,7 +56,7 @@ class Utils:
 
         return part_ant, distances
 
-    def mse(self, g, y_data, mu_data, samples):
+    def mse(self, g, y_data, mu_data):
 
         """
         Calculates the mean square error (MSE) between the collected data and the estimated data.
@@ -67,7 +67,7 @@ class Utils:
         mu_array = np.array(mu_data)
         for i in range(len(mu_array)):
             total_suma = ((float(y_array[i]) - float(mu_array[i])) ** 2) + total_suma
-        MSE = total_suma / samples
+        MSE = total_suma / y_data.shape[0]
         self.MSE_data.append(MSE)
         self.it.append(g)
         return self.MSE_data, self.it

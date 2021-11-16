@@ -81,9 +81,11 @@ class PSOEnvironment(gym.Env):
         self.part_ant = np.zeros((1, 8))
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
         self.MSE_data = []
+        self.MSE_data1 = []
         self.it = []
         self.method = method
         self.mse = []
+        self.bench_array = []
         self.duplicate = False
         self.array_part = np.zeros((1, 8))
         self.reward_function = reward_function
@@ -207,7 +209,7 @@ class PSOEnvironment(gym.Env):
         Initialization of the pso.
         """
         self.reset_variables()
-        self.bench_function = Benchmark_function(self.grid_or, self.resolution, self.xs, self.ys, self.seed).create_new_map()
+        self.bench_function, self.bench_array = Benchmark_function(self.grid_or, self.resolution, self.xs, self.ys, self.seed).create_new_map()
         self.generatePart()
         self.tool()
         random.seed(self.seed)
@@ -219,14 +221,14 @@ class PSOEnvironment(gym.Env):
     def reset_variables(self):
         self.f = None
         self.k = None
-        self.x_h.clear()
-        self.y_h.clear()
-        self.x_p.clear()
-        self.y_p.clear()
-        self.fitness.clear()
-        self.y_data.clear()
-        self.mu_data.clear()
-        self.sigma_data.clear()
+        self.x_h = []
+        self.y_h = []
+        self.x_p = []
+        self.y_p = []
+        self.fitness = []
+        self.y_data = []
+        self.mu_data = []
+        self.sigma_data = []
         self.x_bench = None
         self.y_bench = None
         self.n_plot = float(1)
@@ -244,8 +246,8 @@ class PSOEnvironment(gym.Env):
         self.distances = np.zeros(4)
         self.part_ant = np.zeros((1, 8))
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
-        self.MSE_data.clear()
-        self.it.clear()
+        self.MSE_data = []
+        self.it = []
         self.mse = []
         self.duplicate = False
         self.array_part = np.zeros((1, 8))
@@ -348,7 +350,7 @@ class PSOEnvironment(gym.Env):
         return self.sigma_best, self.mu_best
 
     def calculate_reward(self):
-        self.mse = mean_squared_error(y_true=self.fitness, y_pred=self.mu_data)
+        self.mse = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
         if self.reward_function == 'mse':
             reward = -self.MSE_data[-1]
         elif self.reward_function == 'inc_mse':
@@ -427,7 +429,9 @@ class PSOEnvironment(gym.Env):
             if self.n_data > 4:
                 self.n_data = 1
 
-        self.MSE_data, self.it = self.util.mse(self.g, self.fitness, self.mu_data, self.samples)
+        self.MSE_data1, self.it = self.util.mse(self.g, self.bench_array, self.mu)
+        self.mse = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
+        self.MSE_data.append(self.mse)
 
         self.sigma_best, self.mu_best = self.sigma_max()
 
@@ -505,8 +509,9 @@ class PSOEnvironment(gym.Env):
                     if self.n_data > 4:
                         self.n_data = 1
 
-                self.MSE_data, self.it = self.util.mse(self.g, self.fitness, self.mu_data, self.samples)
-                self.mse = mean_squared_error(y_true=self.fitness, y_pred=self.mu_data)
+                self.MSE_data1, self.it = self.util.mse(self.g, self.bench_array, self.mu)
+                self.mse = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
+                self.MSE_data.append(self.mse)
 
                 self.sigma_best, self.mu_best = self.sigma_max()
 
@@ -565,4 +570,4 @@ class PSOEnvironment(gym.Env):
         """
 
         return self.X_test, self.secure, self.bench_function, self.grid_min, self.sigma, \
-               self.mu, self.MSE_data, self.it, self.part_ant, self.fitness
+               self.mu, self.MSE_data, self.it, self.part_ant, self.bench_array

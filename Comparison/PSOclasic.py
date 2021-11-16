@@ -67,7 +67,7 @@ import matplotlib.pyplot as plt
 
 mse_vec = []
 
-for i in range(1):
+for i in range(300):
 
     done = False
     state = pso.reset()
@@ -87,11 +87,11 @@ for i in range(1):
     plt.grid()
     plt.show()
 
-
+    """
     X_test, secure, bench_function, grid_min, sigma, \
     mu, MSE_data, it, part_ant, y_data = pso.data_out()
     plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
     plot.gaussian(mu, sigma, part_ant)
     plot.benchmark()
     plot.error(MSE_data, it)
-
+    """

@@ -7,6 +7,7 @@ repository: https://github.com/FedePeralta/BO_drones/blob/master/bin/Utils/utils
 import numpy as np
 from deap import benchmarks
 from skopt.benchmarks import branin as brn
+from Environment.bounds import Bounds
 
 
 class Benchmark_function():
@@ -90,7 +91,14 @@ class Benchmark_function():
 
         #bench_function = np.array(self.bench)  # Return solo esto de benchmark function
 
-        return map_created
+        bench = list()
+        df_bounds_or, X_test_or = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
+        for i in range(len(X_test_or)):
+            bench.append(map_created[X_test_or[i][0], X_test_or[i][1]])
+
+        bench_function_or = np.array(bench)
+
+        return map_created, bench_function_or
 
 
 class GroundTruth:
