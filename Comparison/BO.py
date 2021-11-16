@@ -49,6 +49,8 @@ def model_psogp(c1, c2, c3, c4):
             R_vec.append(-reward)
 
 
+
+
 optimizer = BayesianOptimization(
             f=model_psogp,
             pbounds=pbounds,

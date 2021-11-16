@@ -1,6 +1,6 @@
 from PIL import Image
 import numpy as np
-from Data.data_path import map_path
+from Data.data_path import map_path_classic, map_path
 
 
 class Map():
@@ -10,6 +10,7 @@ class Map():
         return
 
     def black_white(self):
+        # im = Image.open(map_path_classic())
         im = Image.open(map_path())
         nim = im.resize((self.xs, self.ys))
         array = np.zeros((self.xs, self.ys))

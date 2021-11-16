@@ -91,7 +91,7 @@ for i in range(1):
     X_test, secure, bench_function, grid_min, sigma, \
     mu, MSE_data, it, part_ant, y_data = pso.data_out()
     plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
-    plot.gaussian(mu, sigma, part_ant)
-    plot.benchmark()
+    # plot.gaussian(mu, sigma, part_ant)
+    # plot.benchmark()
     plot.error(MSE_data, it)
 

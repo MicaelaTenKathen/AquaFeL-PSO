@@ -1,5 +1,5 @@
 from Environment.map import Map
-from Data.data_path import bounds_path, grid_path, available_path, secure_path, se_available_path
+from Data.data_path import *
 import pandas as pd
 import numpy as np
 
@@ -92,6 +92,9 @@ class Bounds():
             else:
                 print('An error occurred. Map bound, y array')
 
+            # bp = bounds_path_classic()
+            # gp = grid_path_classic()
+            # ap = available_path_classic()
             bp = bounds_path()
             gp = grid_path()
             ap = available_path()
@@ -152,6 +155,8 @@ class Bounds():
                             se_last.append(grid_ant)
                             bound = True
 
+            # sp = secure_path_classic()
+            # seap = se_available_path_classic()
             sp = secure_path()
             seap = se_available_path()
 

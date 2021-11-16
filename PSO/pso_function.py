@@ -38,7 +38,8 @@ def createPart():
 
 class PSOEnvironment(gym.Env):
 
-    def __init__(self, resolution, ys, method, initial_seed, initial_position, reward_function='mse', behavioral_method=0):
+    def __init__(self, resolution, ys, method, initial_seed, initial_position, reward_function='mse',
+                 behavioral_method=0):
         self.f = None
         self.k = None
         self.population = 4
@@ -51,7 +52,7 @@ class PSOEnvironment(gym.Env):
         self.xs = int(10000 / (15000 / ys))
         self.ys = ys
         ker = RBF(length_scale=10, length_scale_bounds=(1e-1, 10))
-        self.gpr = GaussianProcessRegressor(kernel=ker, alpha=1 ** 2)  #optimizer=None)
+        self.gpr = GaussianProcessRegressor(kernel=ker, alpha=1e-6)  # optimizer=None)
         self.x_h = []
         self.y_h = []
         self.x_p = []
@@ -104,8 +105,8 @@ class PSOEnvironment(gym.Env):
 
         self.df_bounds, self.X_test = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
         self.secure, self.df_bounds = Bounds(self.resolution, self.xs, self.ys).interest_area()
-        #self.secure = navigation_map
-        #print(self.secure)
+        # self.secure = navigation_map
+        # print(self.secure)
 
         self.bench_function = None
 
@@ -209,7 +210,8 @@ class PSOEnvironment(gym.Env):
         Initialization of the pso.
         """
         self.reset_variables()
-        self.bench_function, self.bench_array = Benchmark_function(self.grid_or, self.resolution, self.xs, self.ys, self.seed).create_new_map()
+        self.bench_function, self.bench_array = Benchmark_function(self.grid_or, self.resolution, self.xs, self.ys,
+                                                                   self.seed).create_new_map()
         self.generatePart()
         self.tool()
         random.seed(self.seed)
@@ -350,7 +352,6 @@ class PSOEnvironment(gym.Env):
         return self.sigma_best, self.mu_best
 
     def calculate_reward(self):
-        self.mse = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
         if self.reward_function == 'mse':
             reward = -self.MSE_data[-1]
         elif self.reward_function == 'inc_mse':
@@ -429,9 +430,10 @@ class PSOEnvironment(gym.Env):
             if self.n_data > 4:
                 self.n_data = 1
 
-        self.MSE_data1, self.it = self.util.mse(self.g, self.bench_array, self.mu)
+        # self.MSE_data1, self.it = self.util.mse(self.g, self.bench_array, self.mu)
         self.mse = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
         self.MSE_data.append(self.mse)
+        self.it.append(self.g)
 
         self.sigma_best, self.mu_best = self.sigma_max()
 
@@ -509,9 +511,10 @@ class PSOEnvironment(gym.Env):
                     if self.n_data > 4:
                         self.n_data = 1
 
-                self.MSE_data1, self.it = self.util.mse(self.g, self.bench_array, self.mu)
+                # self.MSE_data1, self.it = self.util.mse(self.g, self.bench_array, self.mu)
                 self.mse = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
                 self.MSE_data.append(self.mse)
+                self.it.append(self.g)
 
                 self.sigma_best, self.mu_best = self.sigma_max()
 
@@ -526,7 +529,7 @@ class PSOEnvironment(gym.Env):
         reward = self.calculate_reward()
 
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
-        #print(self.logbook.stream)
+        # print(self.logbook.stream)
         if ((self.distances) >= 150).any():
             done = True
         else:
@@ -571,3 +574,6 @@ class PSOEnvironment(gym.Env):
 
         return self.X_test, self.secure, self.bench_function, self.grid_min, self.sigma, \
                self.mu, self.MSE_data, self.it, self.part_ant, self.bench_array
+
+    def MSE_value(self):
+        return self.MSE_data
