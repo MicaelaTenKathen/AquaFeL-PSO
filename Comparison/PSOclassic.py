@@ -45,7 +45,7 @@ df_bounds: data of the limits of the surface where the drone can travel
 # Variables initialization
 
 
-action = np.array([2, 2, 0, 0])
+action = np.array([4, 1.083, 1.1316, 0])
 initial_position = np.array([[0, 0],
                              [8, 56],
                              [37, 16],
@@ -56,7 +56,7 @@ start_time = time.time()
 # PSO initialization
 
 method = 0
-pso = PSOEnvironment(resolution, ys, method, initial_seed=600, initial_position=initial_position,
+pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position,
                      reward_function='inc_mse')
 
 # Gaussian process initialization
@@ -67,11 +67,13 @@ import matplotlib.pyplot as plt
 
 mse_vec = []
 
-for i in range(1):
+for i in range(10):
 
     done = False
     state = pso.reset()
     R_vec = []
+    mean_MSE = []
+
 
     # Main part of the code
 
@@ -80,6 +82,23 @@ for i in range(1):
 
         R_vec.append(-reward)
 
+        MSE_data = np.array(pso.MSE_value())
+        # MSE_actual = MSE_data[n:]
+        # mean_MSE.append(np.mean(MSE_actual))
+        # n = MSE_data.shape[0] - 1
+        # # X_test, secure, bench_function, grid_min, sigma, \
+        # mu, MSE_data, it, part_ant, y_data = pso.data_out()
+        # plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
+        # plot.gaussian(mu, sigma, part_ant)
+        # plot.benchmark()
+
+    # if i == 0:
+    #   MSE_array = pd.DataFrame(mean_MSE)
+    # else:
+    #   MSE_array[i] = mean_MSE
+
+    # last_mse.append(MSE_data[-1])
+
     print('Time', time.time() - start_time)
 
     plt.plot(R_vec)
@@ -87,9 +106,23 @@ for i in range(1):
     plt.grid()
     plt.show()
 
-    X_test, secure, bench_function, grid_min, sigma, \
-    mu, MSE_data, it, part_ant, y_data = pso.data_out()
-    plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
-    # plot.gaussian(mu, sigma, part_ant)
-    # plot.benchmark()
-    plot.error(MSE_data, it)
+    # mean_total = np.mean(np.array(last_mse))
+    # std_total = np.std(np.array(last_mse))
+    # conf_total = std_total * 1.96
+    print('GT:', i)
+    print('Mean:', MSE_data[-1])
+    # print('Std:', std_total)
+    # print('Conf:', conf_total)
+
+
+    # plt.plot(R_vec)
+    #
+    # plt.grid()
+    # plt.show()
+    #
+    # X_test, secure, bench_function, grid_min, sigma, \
+    # mu, MSE_data, it, part_ant, y_data = pso.data_out()
+    # plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
+    # # plot.gaussian(mu, sigma, part_ant)
+    # # plot.benchmark()
+    # plot.error(MSE_data, it)
