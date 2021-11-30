@@ -44,7 +44,7 @@ class Limits:
         return part
 
     def new_limit(self, g, part, s_n, n_data, s_ant, part_ant):
-        with open('./GroundTruth/bounds.npy'.format(self.file), 'rb') as bn:
+        with open('../GroundTruth/bounds.npy'.format(self.file), 'rb') as bn:
             df_bounds = np.load(bn)
         x_int = int(part[0])
         y_int = int(part[1])

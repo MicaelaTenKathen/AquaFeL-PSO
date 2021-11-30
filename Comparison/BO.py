@@ -17,7 +17,7 @@ pbounds = {'c1': (0, 4), 'c2': (0, 4), 'c3': (0, 4), 'c4': (0, 4)}
 resolution = 1
 xs = 100
 ys = 150
-navigation_map = np.genfromtxt('Image/ypacarai_map_bigger.csv')
+# navigation_map = np.genfromtxt('Image/ypacarai_map_bigger.csv')
 
 
 def model_psogp(c1, c2, c3, c4):
@@ -30,12 +30,12 @@ def model_psogp(c1, c2, c3, c4):
                                  [74, 124]])
 
     method = 0
-    pso = PSOEnvironment(resolution, ys, method, initial_seed=600, initial_position=initial_position,
+    pso = PSOEnvironment(resolution, ys, method, initial_seed=1, initial_position=initial_position,
                          reward_function='inc_mse')
 
-    mse_vec = []
+    last_mse = []
 
-    for i in range(10):
+    for i in range(400):
 
         done = False
         state = pso.reset()
@@ -48,7 +48,13 @@ def model_psogp(c1, c2, c3, c4):
 
             R_vec.append(-reward)
 
+        MSE_data = np.array(pso.MSE_value())
+        last_mse.append(MSE_data[-1])
 
+    mean_total = np.mean(np.array(last_mse))
+    MSE = mean_total * -1
+
+    return MSE
 
 
 optimizer = BayesianOptimization(

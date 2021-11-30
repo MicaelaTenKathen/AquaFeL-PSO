@@ -10,8 +10,8 @@ class Map():
         return
 
     def black_white(self):
-        # im = Image.open(map_path_classic())
-        im = Image.open(map_path())
+        im = Image.open(map_path_classic())
+        # im = Image.open(map_path())
         nim = im.resize((self.xs, self.ys))
         array = np.zeros((self.xs, self.ys))
         img = Image.new('RGB', (self.xs, self.ys))

@@ -92,12 +92,12 @@ class Bounds():
             else:
                 print('An error occurred. Map bound, y array')
 
-            # bp = bounds_path_classic()
-            # gp = grid_path_classic()
-            # ap = available_path_classic()
-            bp = bounds_path()
-            gp = grid_path()
-            ap = available_path()
+            bp = bounds_path_classic()
+            gp = grid_path_classic()
+            ap = available_path_classic()
+            # bp = bounds_path()
+            # gp = grid_path()
+            # ap = available_path()
 
             with open(bp, 'wb') as bn:
                 np.save(bn, df_bounds)
@@ -155,10 +155,10 @@ class Bounds():
                             se_last.append(grid_ant)
                             bound = True
 
-            # sp = secure_path_classic()
-            # seap = se_available_path_classic()
-            sp = secure_path()
-            seap = se_available_path()
+            sp = secure_path_classic()
+            seap = se_available_path_classic()
+            # sp = secure_path()
+            # seap = se_available_path()
 
             with open(sp, 'wb') as sg:
                 np.save(sg, secure_grid)
