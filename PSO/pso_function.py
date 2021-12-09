@@ -577,3 +577,6 @@ class PSOEnvironment(gym.Env):
 
     def MSE_value(self):
         return self.MSE_data
+
+    def distances_data(self):
+        return self.distances

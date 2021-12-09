@@ -94,6 +94,7 @@ for i in range(10):
         # plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
         # plot.gaussian(mu, sigma, part_ant)
         # plot.benchmark()
+        distances = pso.distances_data()
 
     #if i == 0:
      #   MSE_array = pd.DataFrame(mean_MSE)

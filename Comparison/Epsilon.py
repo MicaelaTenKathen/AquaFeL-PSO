@@ -20,7 +20,7 @@ GEN: maximum number of code iterations
 resolution = 1
 xs = 100
 ys = 150
-navigation_map = np.genfromtxt('Image/ypacarai_map_bigger.csv')
+navigation_map = np.genfromtxt('../Image/ypacarai_map_bigger.csv')
 
 # Map
 
@@ -56,7 +56,7 @@ start_time = time.time()
 # PSO initialization
 
 method = 0
-pso = PSOEnvironment(resolution, ys, method, initial_seed=600, initial_position=initial_position,
+pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position,
                      reward_function='inc_mse')
 
 # Gaussian process initialization
@@ -69,21 +69,32 @@ mse_vec = []
 epsilon = 0
 delta_epsilon = 0
 
-for i in range(1):
+for i in range(10):
 
     done = False
     state = pso.reset()
     R_vec = []
+    delta_epsilon = 0.116
+    epsilon_array = []
 
     # Main part of the code
 
     while not done:
-        epsilon = epsilon + delta_epsilon
+        distances_array = pso.distances_data()
+        distances = np.max(distances_array)
+        if distances <= 30:
+            epsilon = 0.95
+        elif distances >= 120:
+            epsilon = 0.05
+        else:
+            epsilon = epsilon_ant - delta_epsilon
         val = np.random.rand()
         if epsilon >= val:
             action = np.array([1, 4, 4, 1])
         else:
             action = np.array([4, 1, 1, 4])
+        epsilon_array.append(epsilon)
+        epsilon_ant = epsilon
 
         state, reward, done, dic = pso.step(action)
 
@@ -91,10 +102,12 @@ for i in range(1):
 
     print('Time', time.time() - start_time)
 
-    plt.plot(R_vec)
-
+    plt.plot(epsilon_array)
+    MSE_data = np.array(pso.MSE_value())
     plt.grid()
     plt.show()
+    print('GT:', i)
+    print('Mean:', MSE_data[-1])
 
 
     X_test, secure, bench_function, grid_min, sigma, \
