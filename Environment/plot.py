@@ -75,7 +75,7 @@ class Plots():
     def gaussian(self, mu, sigma, part_ant):
         Z_var, Z_mean = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).Z_var_mean(mu, sigma)
 
-        fig, axs = plt.subplots(1, 2, figsize=(5, 10))
+        fig, axs = plt.subplots(2, 1, figsize=(5, 10))
 
         self.plot_trajectory(axs[0], part_ant[:, 0], part_ant[:, 1], z=None, colormap='winter', num_of_points=(int((part_ant[:,0].shape)[0])*10))
         self.plot_trajectory(axs[0], part_ant[:, 2], part_ant[:, 3], z=None, colormap='Wistia', num_of_points=(int((part_ant[:,0].shape)[0])*10))
@@ -128,14 +128,14 @@ class Plots():
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         axs[1].yaxis.set_major_formatter(ticks_y)
 
-        #plt.savefig("Image/plot.pdf")
+        plt.savefig("../Image/GT3/Tabla_4.png")
         plt.show()
 
     def benchmark(self):
         plot_bench = np.copy(self.bench_function)
         plot_bench[self.grid == 0] = np.nan
         fig = plt.figure()
-        ax1 = fig.add_subplot(121)
+        ax1 = fig.add_subplot(111)
         im4 = ax1.imshow(plot_bench.T, interpolation='bilinear', origin='lower', cmap="jet")
         plt.colorbar(im4, label='µ', shrink=0.74)
         ax1.set_xlabel("x [m]")
@@ -148,6 +148,65 @@ class Plots():
 
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         ax1.yaxis.set_major_formatter(ticks_y)
+        # plt.savefig("../Image/GT3/Ground3.png")
+        plt.show()
+
+    def plot_classic(self, mu, sigma, part_ant):
+        Z_var, Z_mean = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).Z_var_mean(
+            mu, sigma)
+        fig, axs = plt.subplots(2, 1, figsize=(5, 10))
+
+        self.plot_trajectory_classic(axs[0], part_ant[:, 0], part_ant[:, 1], colormap='winter')
+        self.plot_trajectory_classic(axs[0], part_ant[:, 2], part_ant[:, 3], colormap='Wistia')
+        self.plot_trajectory_classic(axs[0], part_ant[:, 4], part_ant[:, 5], colormap='Purples')
+        self.plot_trajectory_classic(axs[0], part_ant[:, 6], part_ant[:, 7], colormap='Reds')
+
+        # im1 = axs[0].scatter(x_ga, y_ga, c=n, cmap="gist_rainbow", marker='.')
+        # p1x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 0]))
+        # p1y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 1]))
+        # axs[0].plot(p1x, p1y, 'r')
+        # p2x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 2]))
+        # p2y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 3]))
+        # axs[0].plot(p2x, p2y, 'w')
+        # p3x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 4]))
+        # p3y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 5]))
+        # axs[0].plot(p3x, p3y, 'c')
+        # p4x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 6]))
+        # p4y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 7]))
+        # axs[0].plot(p4x, p4y, 'k')
+
+        im2 = axs[0].imshow(Z_var.T, interpolation='bilinear', origin='lower', cmap="gist_yarg")
+        # plt.colorbar(im2, ax=axs[0], label='σ', shrink=1.0)
+        # axs[0].set_xlabel("x [m]")
+        axs[0].set_ylabel("y [m]")
+        axs[0].set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
+        axs[0].set_xticks([0, 50, 100])
+        axs[0].set_aspect('equal')
+        axs[0].set_ylim([self.ys, 0])
+        axs[0].grid(True)
+        # ticks_x = ticker.FuncFormatter()
+        ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        axs[0].xaxis.set_major_formatter(ticks_x)
+
+        ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        axs[0].yaxis.set_major_formatter(ticks_y)
+
+        im3 = axs[1].imshow(Z_mean.T, interpolation='bilinear', origin='lower', cmap="jet")
+        # plt.colorbar(im3, ax=axs[1], label='µ', shrink=1.0)
+        axs[1].set_xlabel("x [m]")
+        axs[1].set_ylabel("y [m]")
+        axs[1].set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
+        axs[1].set_xticks([0, 50, 100])
+        axs[1].set_ylim([self.ys, 0])
+        axs[1].set_aspect('equal')
+        axs[1].grid(True)
+        ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        axs[1].xaxis.set_major_formatter(ticks_x)
+
+        ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        axs[1].yaxis.set_major_formatter(ticks_y)
+
+        plt.savefig("../Image/GT3/Tabla_10.png")
         plt.show()
 
     @staticmethod
@@ -162,7 +221,7 @@ class Plots():
         plt.show()
 
     @staticmethod
-    def plot_trajectory(ax, x, y, z=None, colormap='jet', num_of_points=None, linewidth=1, k=3, plot_waypoints=True,
+    def plot_trajectory(ax, x, y, z=None, colormap='jet', num_of_points=None, linewidth=1, k=5, plot_waypoints=True,
                         markersize=0.5):
 
         if z is None:
@@ -182,6 +241,28 @@ class Plots():
             segments = np.concatenate([points[:-2], points[1:-1], points[2:]], axis=1)
             lc = Line3DCollection(segments, norm=plt.Normalize(0, 1), cmap=plt.get_cmap(colormap), linewidth=linewidth)
             lc.set_array(np.linspace(0, 1, len(x_i)))
+            ax.add_collection(lc)
+            ax.scatter(x, y, z, 'k')
+            if plot_waypoints:
+                ax.plot(x, y, 'kx')
+
+    @staticmethod
+    def plot_trajectory_classic(ax, x, y, z=None, colormap='jet', linewidth=1, plot_waypoints=True,
+                        markersize=0.5):
+
+        if z is None:
+            points = np.array([x, y]).T.reshape(-1, 1, 2)
+            segments = np.concatenate([points[:-2], points[1:-1], points[2:]], axis=1)
+            lc = LineCollection(segments, norm=plt.Normalize(0, 1), cmap=plt.get_cmap(colormap), linewidth=linewidth)
+            lc.set_array(np.linspace(0, 1, len(x)))
+            ax.add_collection(lc)
+            if plot_waypoints:
+                ax.plot(x, y, '.', color='black', markersize=markersize)
+        else:
+            points = np.array([x, y, z]).T.reshape(-1, 1, 3)
+            segments = np.concatenate([points[:-2], points[1:-1], points[2:]], axis=1)
+            lc = Line3DCollection(segments, norm=plt.Normalize(0, 1), cmap=plt.get_cmap(colormap), linewidth=linewidth)
+            lc.set_array(np.linspace(0, 1, len(x)))
             ax.add_collection(lc)
             ax.scatter(x, y, z, 'k')
             if plot_waypoints:

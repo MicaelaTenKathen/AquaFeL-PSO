@@ -1,3 +1,5 @@
+import openpyxl
+
 from Data.limits import Limits
 from Environment.plot import Plots
 from Environment.map import Map
@@ -78,7 +80,7 @@ class PSOEnvironment(gym.Env):
         self.g = 0
         self.post_array = np.array([1, 1, 1, 1])
         self.distances = np.zeros(4)
-        self.lam = 0.3
+        self.lam = 0.375
         self.part_ant = np.zeros((1, 8))
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
         self.MSE_data = []
@@ -86,6 +88,8 @@ class PSOEnvironment(gym.Env):
         self.it = []
         self.method = method
         self.mse = []
+        self.mse_data = []
+        self.mse_comparison = []
         self.bench_array = []
         self.duplicate = False
         self.array_part = np.zeros((1, 8))
@@ -249,6 +253,7 @@ class PSOEnvironment(gym.Env):
         self.part_ant = np.zeros((1, 8))
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
         self.MSE_data = []
+        self.mse_comparison = []
         self.it = []
         self.mse = []
         self.duplicate = False
@@ -527,11 +532,18 @@ class PSOEnvironment(gym.Env):
         self.return_state()
 
         reward = self.calculate_reward()
+        self.mse_data = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
+        self.mse_comparison.append(self.mse_data)
 
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
         # print(self.logbook.stream)
         if ((self.distances) >= 150).any():
             done = True
+            # wb = openpyxl.Workbook()
+            # hoja = wb.active
+            # # print(self.mse_comparison)
+            # hoja.append(self.mse_comparison)
+            # wb.save('../Test/BO/MSE' + str(self.seed) + '.xlsx')
         else:
             done = False
 

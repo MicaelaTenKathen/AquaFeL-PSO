@@ -45,7 +45,7 @@ df_bounds: data of the limits of the surface where the drone can travel
 # Variables initialization
 
 
-action = np.array([3.1286, 2.568, 0.79, 0])
+action = np.array([2.0187, 0, 3.2697, 0])
 initial_position = np.array([[0, 0],
                              [8, 56],
                              [37, 16],
@@ -67,7 +67,7 @@ import matplotlib.pyplot as plt
 
 mse_vec = []
 
-for i in range(10):
+for i in range(1):
 
     done = False
     state = pso.reset()
@@ -91,7 +91,7 @@ for i in range(10):
     X_test, secure, bench_function, grid_min, sigma, \
     mu, MSE_data, it, part_ant, y_data = pso.data_out()
     plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
-    # plot.gaussian(mu, sigma, part_ant)
-    # plot.benchmark()
+    plot.gaussian(mu, sigma, part_ant)
+    plot.benchmark()
     plot.error(MSE_data, it)
 

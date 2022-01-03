@@ -45,7 +45,7 @@ df_bounds: data of the limits of the surface where the drone can travel
 # Variables initialization
 
 
-action = np.array([4, 1.083, 1.1316, 0])
+action = np.array([0, 0, 3, 0])
 initial_position = np.array([[0, 0],
                              [8, 56],
                              [37, 16],

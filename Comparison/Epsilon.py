@@ -114,6 +114,7 @@ for i in range(10):
     mu, MSE_data, it, part_ant, y_data = pso.data_out()
     plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
     # plot.gaussian(mu, sigma, part_ant)
+    plot.plot_classic(mu, sigma, part_ant)
     # plot.benchmark()
     plot.error(MSE_data, it)
 

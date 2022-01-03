@@ -35,7 +35,7 @@ def model_psogp(c1, c2, c3, c4):
 
     last_mse = []
 
-    for i in range(400):
+    for i in range(200):
 
         done = False
         state = pso.reset()
