@@ -23,7 +23,6 @@ def data_val(n):
     conf = std * 1.96
     return mean, std
 
-
 def comparison(meanbl, confbl, meanbg, confbg, meanun, confun, meancon, confcon, meancla, confcla, meanbo, confbo, meanep, confep, mult):
     width = 0.3
 
