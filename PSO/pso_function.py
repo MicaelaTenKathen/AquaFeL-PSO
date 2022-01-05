@@ -74,6 +74,8 @@ class PSOEnvironment(gym.Env):
         self.mu_best = []
         self.n_data = 1
         self.num = 0
+        self.save = 0
+        self.save_dist = [25, 50, 75, 100, 125, 150, 175]
         self.seed = initial_seed
         self.mu = []
         self.sigma = []
@@ -90,7 +92,16 @@ class PSOEnvironment(gym.Env):
         self.mse = []
         self.mse_data = []
         self.mse_comparison = []
+        self.mse_comparison1 = []
+        self.mse_comparison2 = []
+        self.mse_comparison3 = []
+        self.mse_comparison4 = []
+        self.mse_comparison5 = []
+        self.mse_comparison6 = []
+        self.mse_comparison7 = []
+        self.mse_comparison8 = []
         self.bench_array = []
+        self.mse_distance = []
         self.duplicate = False
         self.array_part = np.zeros((1, 8))
         self.reward_function = reward_function
@@ -253,7 +264,11 @@ class PSOEnvironment(gym.Env):
         self.part_ant = np.zeros((1, 8))
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
         self.MSE_data = []
+        self.save = 0
         self.mse_comparison = []
+        self.mse_distance = []
+
+
         self.it = []
         self.mse = []
         self.duplicate = False
@@ -449,6 +464,30 @@ class PSOEnvironment(gym.Env):
 
         return self.state
 
+    def save_data(self):
+        mult = self.save_dist[self.save]
+        mult_min = mult - 5
+        mult_max = mult + 5
+        # print(mult, mult_min, mult_max, np.max(self.distances))
+        if mult_min <= np.max(self.distances) < mult_max:
+            self.mse_data = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
+            # print(np.max(self.distances))
+            if self.save == 0:
+                self.mse_comparison1.append(self.mse_data)
+            elif self.save == 1:
+                self.mse_comparison2.append(self.mse_data)
+            elif self.save == 2:
+                self.mse_comparison3.append(self.mse_data)
+            elif self.save == 3:
+                self.mse_comparison4.append(self.mse_data)
+            elif self.save == 4:
+                self.mse_comparison5.append(self.mse_data)
+            elif self.save == 5:
+                self.mse_comparison6.append(self.mse_data)
+            elif self.save == 6:
+                self.mse_comparison7.append(self.mse_data)
+            self.save += 1
+
     def step(self, action):
 
         """
@@ -527,25 +566,38 @@ class PSOEnvironment(gym.Env):
 
             dis_steps = np.mean(self.distances) - dist_ant
 
+            self.save_data()
             self.g += 1
 
+
         self.return_state()
+
 
         reward = self.calculate_reward()
         self.mse_data = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
         self.mse_comparison.append(self.mse_data)
+        self.mse_distance.append(np.max(self.distances))
 
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
         # print(self.logbook.stream)
+
         if ((self.distances) >= 150).any():
             done = True
             # wb = openpyxl.Workbook()
             # hoja = wb.active
             # # print(self.mse_comparison)
             # hoja.append(self.mse_comparison)
-            # wb.save('../Test/BO/MSE' + str(self.seed) + '.xlsx')
+            # wb.save('../Test/Epsilon/MSE' + str(self.seed) + '.xlsx')
+            #
+            # wb1 = openpyxl.Workbook()
+            # hoja1 = wb1.active
+            # # print(self.mse_comparison)
+            # hoja1.append(self.mse_distance)
+            # wb1.save('../Test/Epsilon/Distance' + str(self.seed) + '.xlsx')
+
         else:
             done = False
+
 
         return self.state, reward, done, {}
 
@@ -585,10 +637,52 @@ class PSOEnvironment(gym.Env):
         """
 
         return self.X_test, self.secure, self.bench_function, self.grid_min, self.sigma, \
-               self.mu, self.MSE_data, self.it, self.part_ant, self.bench_array
+               self.mu, self.MSE_data, self.it, self.part_ant, self.bench_array, self.grid_or
 
     def MSE_value(self):
         return self.MSE_data
 
     def distances_data(self):
         return self.distances
+
+    def save_excel(self):
+        wb = openpyxl.Workbook()
+        hoja = wb.active
+        hoja.append(self.mse_comparison1)
+        wb.save('../Test/BO/MSE_25.xlsx')
+
+        wb2 = openpyxl.Workbook()
+        hoja2 = wb2.active
+        hoja2.append(self.mse_comparison2)
+        wb2.save('../Test/BO/MSE_50.xlsx')
+
+        wb3 = openpyxl.Workbook()
+        hoja3 = wb3.active
+        hoja3.append(self.mse_comparison3)
+        wb3.save('../Test/BO/MSE_75.xlsx')
+
+        wb4 = openpyxl.Workbook()
+        hoja4 = wb4.active
+        hoja4.append(self.mse_comparison4)
+        wb4.save('../Test/BO/MSE_100.xlsx')
+
+        wb5 = openpyxl.Workbook()
+        hoja5 = wb5.active
+        hoja5.append(self.mse_comparison5)
+        wb5.save('../Test/BO/MSE_125.xlsx')
+
+        wb6 = openpyxl.Workbook()
+        hoja6 = wb6.active
+        hoja6.append(self.mse_comparison6)
+        wb6.save('../Test/BO/MSE_150.xlsx')
+
+        wb7 = openpyxl.Workbook()
+        hoja7 = wb7.active
+        hoja7.append(self.mse_comparison7)
+        wb7.save('../Test/BO/MSE_175.xlsx')
+
+        # wb8 = openpyxl.Workbook()
+        # hoja8 = wb8.active
+        # hoja8.append(self.mse_comparison8)
+        # wb8.save('../Test/Contamination/MSE_160.xlsx')
+

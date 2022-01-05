@@ -128,7 +128,7 @@ class Plots():
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         axs[1].yaxis.set_major_formatter(ticks_y)
 
-        plt.savefig("../Image/GT3/Tabla_4.png")
+        # plt.savefig("../Image/GT3/Tabla_4.png")
         plt.show()
 
     def benchmark(self):
@@ -137,7 +137,7 @@ class Plots():
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
         im4 = ax1.imshow(plot_bench.T, interpolation='bilinear', origin='lower', cmap="jet")
-        plt.colorbar(im4, label='µ', shrink=0.74)
+        plt.colorbar(im4, label='µ', shrink=1)
         ax1.set_xlabel("x [m]")
         ax1.set_ylabel("y [m]")
         ax1.set_ylim([self.ys, 0])
@@ -148,7 +148,7 @@ class Plots():
 
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         ax1.yaxis.set_major_formatter(ticks_y)
-        # plt.savefig("../Image/GT3/Ground3.png")
+        # plt.savefig("../Image/GT1/Ground1.png")
         plt.show()
 
     def plot_classic(self, mu, sigma, part_ant):
@@ -176,7 +176,7 @@ class Plots():
         # axs[0].plot(p4x, p4y, 'k')
 
         im2 = axs[0].imshow(Z_var.T, interpolation='bilinear', origin='lower', cmap="gist_yarg")
-        # plt.colorbar(im2, ax=axs[0], label='σ', shrink=1.0)
+        plt.colorbar(im2, ax=axs[0], label='σ', shrink=1.0)
         # axs[0].set_xlabel("x [m]")
         axs[0].set_ylabel("y [m]")
         axs[0].set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
@@ -192,7 +192,7 @@ class Plots():
         axs[0].yaxis.set_major_formatter(ticks_y)
 
         im3 = axs[1].imshow(Z_mean.T, interpolation='bilinear', origin='lower', cmap="jet")
-        # plt.colorbar(im3, ax=axs[1], label='µ', shrink=1.0)
+        plt.colorbar(im3, ax=axs[1], label='µ', shrink=1.0)
         axs[1].set_xlabel("x [m]")
         axs[1].set_ylabel("y [m]")
         axs[1].set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
@@ -206,7 +206,7 @@ class Plots():
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         axs[1].yaxis.set_major_formatter(ticks_y)
 
-        plt.savefig("../Image/GT3/Tabla_10.png")
+        # plt.savefig("../Image/GT4/Tabla_5.png")
         plt.show()
 
     @staticmethod

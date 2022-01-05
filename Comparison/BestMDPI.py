@@ -40,7 +40,7 @@ grid_max_y: maximum limit on the y-axis of the map
 n: number of the ground truth
 bench_function: benchmark function values
 X_test: coordinates of the points that are analyzed by the benchmark function
-secure: map grid of the surface with security limits
+secure: map grid of the surface with security limits 
 df_bounds: data of the limits of the surface where the drone can travel
 """
 
@@ -71,7 +71,7 @@ import matplotlib.pyplot as plt
 mse_vec = []
 last_mse = []
 
-for i in range(1):
+for i in range(10):
 
     done = False
     state = pso.reset()
@@ -121,10 +121,11 @@ for i in range(1):
 
 
 X_test, secure, bench_function, grid_min, sigma, \
-mu, MSE_data, it, part_ant, y_data = pso.data_out()
-plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
+mu, MSE_data, it, part_ant, y_data, grid = pso.data_out()
+plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
 plot.plot_classic(mu, sigma, part_ant)
 # plot.gaussian(mu, sigma, part_ant)
 plot.benchmark()
+pso.save_excel()
 plot.error(MSE_data, it)
 
