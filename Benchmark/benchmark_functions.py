@@ -66,7 +66,8 @@ class Benchmark_function():
               #  self.c.append(5)
             #self.a = np.array(self.a)
             #self.c = np.array(self.c).T
-            num_of_peaks = np.random.RandomState(self.seed).randint(low=1, high=5)
+            # num_of_peaks = np.random.RandomState(self.seed).randint(low=1, high=5)
+            num_of_peaks = 1
             self.a = np.random.RandomState(self.seed).random(size=(num_of_peaks, 2))
             self.c = np.ones((num_of_peaks)) * 0.05
             #self.a = np.array(self.a)

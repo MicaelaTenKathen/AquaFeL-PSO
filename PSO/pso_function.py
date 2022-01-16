@@ -41,7 +41,8 @@ def createPart():
 class PSOEnvironment(gym.Env):
 
     def __init__(self, resolution, ys, method, initial_seed, initial_position, reward_function='mse',
-                 behavioral_method=0):
+                 behavioral_method=0, type_error='all_map'):
+        self.type_error = type_error
         self.f = None
         self.k = None
         self.population = 4
@@ -62,6 +63,7 @@ class PSOEnvironment(gym.Env):
         self.fitness = []
         self.y_data = []
         self.mu_data = []
+        self.mu_max = 0
         self.sigma_data = []
         self.x_bench = None
         self.y_bench = None
@@ -85,23 +87,25 @@ class PSOEnvironment(gym.Env):
         self.lam = 0.375
         self.part_ant = np.zeros((1, 8))
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
-        self.MSE_data = []
-        self.MSE_data1 = []
+        self.error_data = []
+        self.error_data1 = []
         self.it = []
+        self.coordinate_bench_max = []
+        self.bench_max = 0
         self.method = method
-        self.mse = []
-        self.mse_data = []
-        self.mse_comparison = []
-        self.mse_comparison1 = []
-        self.mse_comparison2 = []
-        self.mse_comparison3 = []
-        self.mse_comparison4 = []
-        self.mse_comparison5 = []
-        self.mse_comparison6 = []
-        self.mse_comparison7 = []
-        self.mse_comparison8 = []
+        self.error = []
+        self.ERROR_data = []
+        self.error_comparison = []
+        self.error_comparison1 = []
+        self.error_comparison2 = []
+        self.error_comparison3 = []
+        self.error_comparison4 = []
+        self.error_comparison5 = []
+        self.error_comparison6 = []
+        self.error_comparison7 = []
+        self.error_comparison8 = []
         self.bench_array = []
-        self.mse_distance = []
+        self.error_distance = []
         self.duplicate = False
         self.array_part = np.zeros((1, 8))
         self.reward_function = reward_function
@@ -122,7 +126,7 @@ class PSOEnvironment(gym.Env):
         self.secure, self.df_bounds = Bounds(self.resolution, self.xs, self.ys).interest_area()
         # self.secure = navigation_map
         # print(self.secure)
-
+        self.X_test_y = self.X_test[1]
         self.bench_function = None
 
         self.plot = Plots(self.xs, self.ys, self.X_test, self.secure, self.bench_function, self.grid_min)
@@ -227,6 +231,7 @@ class PSOEnvironment(gym.Env):
         self.reset_variables()
         self.bench_function, self.bench_array = Benchmark_function(self.grid_or, self.resolution, self.xs, self.ys,
                                                                    self.seed).create_new_map()
+        self.max_contamination()
         self.generatePart()
         self.tool()
         random.seed(self.seed)
@@ -255,6 +260,7 @@ class PSOEnvironment(gym.Env):
         self.dist_ant = None
         self.sigma_best = []
         self.mu_best = []
+        self.coordinate_bench_max = []
         self.n_data = 1
         self.mu = []
         self.p = 0
@@ -263,14 +269,14 @@ class PSOEnvironment(gym.Env):
         self.distances = np.zeros(4)
         self.part_ant = np.zeros((1, 8))
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
-        self.MSE_data = []
+        self.error_data = []
         self.save = 0
-        self.mse_comparison = []
-        self.mse_distance = []
-
+        self.error_comparison = []
+        self.error_distance = []
+        self.error = None
 
         self.it = []
-        self.mse = []
+        self.error = []
         self.duplicate = False
         self.array_part = np.zeros((1, 8))
         self.seed += 1
@@ -283,6 +289,9 @@ class PSOEnvironment(gym.Env):
         self.num += 1
         self.g = 0
         self.distances = np.zeros(4)
+
+    def max_contamination(self):
+        self.bench_max, self.coordinate_bench_max = self.obtain_max(self.bench_array)
 
     def pso_fitness(self, part):
 
@@ -349,33 +358,16 @@ class PSOEnvironment(gym.Env):
         Returns the coordinates of the maximum uncertainty (sigma_best) and the maximum contamination (mu_best).
         """
 
-        sigma_max = np.max(self.sigma)
-        index_sigma = np.where(self.sigma == sigma_max)
-        index_x1 = index_sigma[0]
-        index_x2 = index_x1[0]
-        index_x = int(self.X_test[index_x2][0])
-        index_y = int(self.X_test[index_x2][1])
-
-        mu_max = np.max(self.mu)
-        index_mu = np.where(self.mu == mu_max)
-        index_x1mu = index_mu[0]
-        index_x2mu = index_x1mu[0]
-        index_xmu = int(self.X_test[index_x2mu][0])
-        index_ymu = int(self.X_test[index_x2mu][1])
-
-        best_1 = [index_x, index_y]
-        self.sigma_best = np.array(best_1)
-
-        best_2 = [index_xmu, index_ymu]
-        self.mu_best = np.array(best_2)
+        sigma_max, self.sigma_best = self.obtain_max(self.sigma)
+        mu_max, self.mu_best = self.obtain_max(self.mu)
 
         return self.sigma_best, self.mu_best
 
     def calculate_reward(self):
         if self.reward_function == 'mse':
-            reward = -self.MSE_data[-1]
+            reward = -self.error_data[-1]
         elif self.reward_function == 'inc_mse':
-            reward = self.MSE_data[-2] - self.MSE_data[-1]
+            reward = self.error_data[-2] - self.error_data[-1]
         return reward
 
     def check_duplicate(self, part):
@@ -451,8 +443,8 @@ class PSOEnvironment(gym.Env):
                 self.n_data = 1
 
         # self.MSE_data1, self.it = self.util.mse(self.g, self.bench_array, self.mu)
-        self.mse = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
-        self.MSE_data.append(self.mse)
+        self.error = self.calculate_error()
+        self.error_data.append(self.error)
         self.it.append(self.g)
 
         self.sigma_best, self.mu_best = self.sigma_max()
@@ -470,23 +462,53 @@ class PSOEnvironment(gym.Env):
         mult_max = mult + 5
         # print(mult, mult_min, mult_max, np.max(self.distances))
         if mult_min <= np.max(self.distances) < mult_max:
-            self.mse_data = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
+            self.ERROR_data = self.calculate_error()
             # print(np.max(self.distances))
             if self.save == 0:
-                self.mse_comparison1.append(self.mse_data)
+                self.error_comparison1.append(self.ERROR_data)
             elif self.save == 1:
-                self.mse_comparison2.append(self.mse_data)
+                self.error_comparison2.append(self.ERROR_data)
             elif self.save == 2:
-                self.mse_comparison3.append(self.mse_data)
+                self.error_comparison3.append(self.ERROR_data)
             elif self.save == 3:
-                self.mse_comparison4.append(self.mse_data)
+                self.error_comparison4.append(self.ERROR_data)
             elif self.save == 4:
-                self.mse_comparison5.append(self.mse_data)
+                self.error_comparison5.append(self.ERROR_data)
             elif self.save == 5:
-                self.mse_comparison6.append(self.mse_data)
+                self.error_comparison6.append(self.ERROR_data)
             elif self.save == 6:
-                self.mse_comparison7.append(self.mse_data)
+                self.error_comparison7.append(self.ERROR_data)
             self.save += 1
+
+    def obtain_max(self, array_function):
+        max_value = np.max(array_function)
+        index_1 = np.where(array_function == max_value)
+        index_x1 = index_1[0]
+
+        index_x2 = index_x1[0]
+        index_x = int(self.X_test[index_x2][0])
+        index_y = int(self.X_test[index_x2][1])
+
+        index_xy = [index_x, index_y]
+        coordinate_max = np.array(index_xy)
+
+        return max_value, coordinate_max
+
+    def calculate_error(self):
+        if self.type_error == 'all_map':
+            self.error = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
+        elif self.type_error == 'contamination':
+            for i in range(len(self.X_test)):
+                di = self.X_test[i]
+                dix = di[0]
+                diy = di[1]
+                if dix == self.coordinate_bench_max[0] and diy == self.coordinate_bench_max[1]:
+                    mu_max = self.mu[i]
+                    break
+            mu_max = mu_max[0]
+            # print(mu_max)
+            self.error = self.bench_max - mu_max
+        return self.error
 
     def step(self, action):
 
@@ -556,8 +578,8 @@ class PSOEnvironment(gym.Env):
                         self.n_data = 1
 
                 # self.MSE_data1, self.it = self.util.mse(self.g, self.bench_array, self.mu)
-                self.mse = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
-                self.MSE_data.append(self.mse)
+                self.error = self.calculate_error()
+                self.error_data.append(self.error)
                 self.it.append(self.g)
 
                 self.sigma_best, self.mu_best = self.sigma_max()
@@ -569,14 +591,12 @@ class PSOEnvironment(gym.Env):
             self.save_data()
             self.g += 1
 
-
         self.return_state()
 
-
         reward = self.calculate_reward()
-        self.mse_data = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
-        self.mse_comparison.append(self.mse_data)
-        self.mse_distance.append(np.max(self.distances))
+        self.ERROR_data = self.calculate_error()
+        self.error_comparison.append(self.ERROR_data)
+        self.error_distance.append(np.max(self.distances))
 
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
         # print(self.logbook.stream)
@@ -597,7 +617,6 @@ class PSOEnvironment(gym.Env):
 
         else:
             done = False
-
 
         return self.state, reward, done, {}
 
@@ -637,10 +656,10 @@ class PSOEnvironment(gym.Env):
         """
 
         return self.X_test, self.secure, self.bench_function, self.grid_min, self.sigma, \
-               self.mu, self.MSE_data, self.it, self.part_ant, self.bench_array, self.grid_or
+               self.mu, self.error_data, self.it, self.part_ant, self.bench_array, self.grid_or, self.bench_max
 
-    def MSE_value(self):
-        return self.MSE_data
+    def error_value(self):
+        return self.error_data
 
     def distances_data(self):
         return self.distances
@@ -648,38 +667,38 @@ class PSOEnvironment(gym.Env):
     def save_excel(self):
         wb = openpyxl.Workbook()
         hoja = wb.active
-        hoja.append(self.mse_comparison1)
-        wb.save('../Test/BO/MSE_25.xlsx')
+        hoja.append(self.error_comparison1)
+        wb.save('../Test/BO/Error_25.xlsx')
 
         wb2 = openpyxl.Workbook()
         hoja2 = wb2.active
-        hoja2.append(self.mse_comparison2)
-        wb2.save('../Test/BO/MSE_50.xlsx')
+        hoja2.append(self.error_comparison2)
+        wb2.save('../Test/BO/Error_50.xlsx')
 
         wb3 = openpyxl.Workbook()
         hoja3 = wb3.active
-        hoja3.append(self.mse_comparison3)
-        wb3.save('../Test/BO/MSE_75.xlsx')
+        hoja3.append(self.error_comparison3)
+        wb3.save('../Test/BO/Error_75.xlsx')
 
         wb4 = openpyxl.Workbook()
         hoja4 = wb4.active
-        hoja4.append(self.mse_comparison4)
-        wb4.save('../Test/BO/MSE_100.xlsx')
+        hoja4.append(self.error_comparison4)
+        wb4.save('../Test/BO/Error_100.xlsx')
 
         wb5 = openpyxl.Workbook()
         hoja5 = wb5.active
-        hoja5.append(self.mse_comparison5)
-        wb5.save('../Test/BO/MSE_125.xlsx')
+        hoja5.append(self.error_comparison5)
+        wb5.save('../Test/BO/Error_125.xlsx')
 
         wb6 = openpyxl.Workbook()
         hoja6 = wb6.active
-        hoja6.append(self.mse_comparison6)
-        wb6.save('../Test/BO/MSE_150.xlsx')
+        hoja6.append(self.error_comparison6)
+        wb6.save('../Test/BO/Error_150.xlsx')
 
         wb7 = openpyxl.Workbook()
         hoja7 = wb7.active
-        hoja7.append(self.mse_comparison7)
-        wb7.save('../Test/BO/MSE_175.xlsx')
+        hoja7.append(self.error_comparison7)
+        wb7.save('../Test/BO/ErrorE_175.xlsx')
 
         # wb8 = openpyxl.Workbook()
         # hoja8 = wb8.active

@@ -60,7 +60,7 @@ start_time = time.time()
 
 method = 0
 pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position,
-                     reward_function='inc_mse')
+                     reward_function='inc_mse', type_error='contamination')
 
 # Gaussian process initialization
 
@@ -68,8 +68,8 @@ pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_posit
 # First iteration of PSO
 import matplotlib.pyplot as plt
 
-mse_vec = []
-last_mse = []
+error_vec = []
+last_error = []
 
 for i in range(10):
 
@@ -77,25 +77,25 @@ for i in range(10):
     state = pso.reset()
     R_vec = []
     n = 0
-    mean_MSE = []
+    mean_error = []
 
     # Main part of the code
-
     while not done:
         state, reward, done, dic = pso.step(action)
 
         R_vec.append(-reward)
 
-        MSE_data = np.array(pso.MSE_value())
-        MSE_actual = MSE_data[n:]
-        mean_MSE.append(np.mean(MSE_actual))
-        n = MSE_data.shape[0] - 1
-        # X_test, secure, bench_function, grid_min, sigma, \
-        # mu, MSE_data, it, part_ant, y_data = pso.data_out()
-        # plot = Plots(xs, ys, X_test, secure, bench_function, grid_min)
-        # plot.gaussian(mu, sigma, part_ant)
-        # plot.benchmark()
-        distances = pso.distances_data()
+        error_data = np.array(pso.error_value())
+        error_actual = error_data[n:]
+        mean_error.append(np.mean(error_actual))
+        n = error_data.shape[0] - 1
+    X_test, secure, bench_function, grid_min, sigma, \
+    mu, MSE_data, it, part_ant, y_data, grid, bench_max = pso.data_out()
+    plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
+    # plot.gaussian(mu, sigma, part_ant)
+    plot.plot_classic(mu, sigma, part_ant)
+    plot.benchmark()
+    distances = pso.distances_data()
 
     #if i == 0:
      #   MSE_array = pd.DataFrame(mean_MSE)
@@ -115,17 +115,18 @@ for i in range(10):
     # std_total = np.std(np.array(last_mse))
     # conf_total = std_total * 1.96
     print('GT:', i)
-    print('Mean:', MSE_data[-1])
+    print('Mean:', error_data[-1])
+    print('Bench:', bench_max)
     # print('Std:', std_total)
     # print('Conf:', conf_total)
 
 
 X_test, secure, bench_function, grid_min, sigma, \
-mu, MSE_data, it, part_ant, y_data, grid = pso.data_out()
+mu, error_data, it, part_ant, y_data, grid = pso.data_out()
 plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
 plot.plot_classic(mu, sigma, part_ant)
 # plot.gaussian(mu, sigma, part_ant)
 plot.benchmark()
 pso.save_excel()
-plot.error(MSE_data, it)
+plot.error(error_data, it)
 

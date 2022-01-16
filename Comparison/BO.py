@@ -31,9 +31,9 @@ def model_psogp(c1, c2, c3, c4):
 
     method = 0
     pso = PSOEnvironment(resolution, ys, method, initial_seed=1, initial_position=initial_position,
-                         reward_function='inc_mse')
+                         reward_function='inc_mse', type_error='contamination')
 
-    last_mse = []
+    last_error = []
 
     for i in range(200):
 
@@ -48,13 +48,13 @@ def model_psogp(c1, c2, c3, c4):
 
             R_vec.append(-reward)
 
-        MSE_data = np.array(pso.MSE_value())
-        last_mse.append(MSE_data[-1])
+        error_data = np.array(pso.error_value())
+        last_error.append(error_data[-1])
 
-    mean_total = np.mean(np.array(last_mse))
-    MSE = mean_total * -1
+    error_total = np.mean(np.array(last_error))
+    error = error_total * -1
 
-    return MSE
+    return error
 
 
 optimizer = BayesianOptimization(
