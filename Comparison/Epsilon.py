@@ -57,8 +57,7 @@ start_time = time.time()
 
 method = 0
 pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position,
-                     reward_function='inc_mse')
-
+                     reward_function='inc_mse', type_error='contamination')
 # Gaussian process initialization
 
 
@@ -103,7 +102,7 @@ for i in range(10):
     print('Time', time.time() - start_time)
 
     plt.plot(epsilon_array)
-    MSE_data = np.array(pso.MSE_value())
+    MSE_data = np.array(pso.error_value())
     plt.grid()
     plt.show()
     print('GT:', i)
@@ -111,7 +110,7 @@ for i in range(10):
 
 
     X_test, secure, bench_function, grid_min, sigma, \
-    mu, MSE_data, it, part_ant, y_data, grid = pso.data_out()
+    mu, MSE_data, it, part_ant, y_data, grid, bench_max = pso.data_out()
     plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
     # plot.gaussian(mu, sigma, part_ant)
     plot.plot_classic(mu, sigma, part_ant)

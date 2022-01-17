@@ -77,7 +77,7 @@ class PSOEnvironment(gym.Env):
         self.n_data = 1
         self.num = 0
         self.save = 0
-        self.save_dist = [25, 50, 75, 100, 125, 150, 175]
+        self.save_dist = [25, 50, 75, 100, 125, 150, 175, 200]
         self.seed = initial_seed
         self.mu = []
         self.sigma = []
@@ -498,13 +498,16 @@ class PSOEnvironment(gym.Env):
         if self.type_error == 'all_map':
             self.error = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
         elif self.type_error == 'contamination':
-            for i in range(len(self.X_test)):
-                di = self.X_test[i]
-                dix = di[0]
-                diy = di[1]
-                if dix == self.coordinate_bench_max[0] and diy == self.coordinate_bench_max[1]:
-                    mu_max = self.mu[i]
-                    break
+            index_mu_max = [i for i in range(len(self.X_test)) if (self.X_test[i] == self.coordinate_bench_max).all()]
+            index_mu_max = index_mu_max[0]
+            # for i in range(len(self.X_test)):
+            #     di = self.X_test[i]
+            #     dix = di[0]
+            #     diy = di[1]
+            #     if dix == self.coordinate_bench_max[0] and diy == self.coordinate_bench_max[1]:
+            #         mu_max = self.mu[i]
+            #         break
+            mu_max = self.mu[index_mu_max]
             mu_max = mu_max[0]
             # print(mu_max)
             self.error = self.bench_max - mu_max

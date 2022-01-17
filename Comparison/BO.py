@@ -35,7 +35,7 @@ def model_psogp(c1, c2, c3, c4):
 
     last_error = []
 
-    for i in range(200):
+    for i in range(300):
 
         done = False
         state = pso.reset()
