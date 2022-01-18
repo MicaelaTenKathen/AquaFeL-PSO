@@ -77,7 +77,7 @@ class PSOEnvironment(gym.Env):
         self.n_data = 1
         self.num = 0
         self.save = 0
-        self.save_dist = [25, 50, 75, 100, 125, 150, 175]
+        self.save_dist = [25, 50, 75, 100, 125, 150, 175, 200]
         self.seed = initial_seed
         self.mu = []
         self.sigma = []

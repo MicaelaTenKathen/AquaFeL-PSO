@@ -148,7 +148,7 @@ class Plots():
 
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         ax1.yaxis.set_major_formatter(ticks_y)
-        # plt.savefig("../Image/GT1/Ground1.png")
+        # plt.savefig("../Image/Contamination/GT3/Ground3.png")
         plt.show()
 
     def plot_classic(self, mu, sigma, part_ant):
@@ -206,7 +206,7 @@ class Plots():
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         axs[1].yaxis.set_major_formatter(ticks_y)
 
-        # plt.savefig("../Image/GT4/Tabla_5.png")
+        # plt.savefig("../Image/Contamination/GT3/Tabla_6.png")
         plt.show()
 
     @staticmethod

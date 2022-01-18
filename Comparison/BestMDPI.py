@@ -47,7 +47,7 @@ df_bounds: data of the limits of the surface where the drone can travel
 # Variables initialization
 
 
-action = np.array([2, 2, 0, 0])
+action = np.array([2.0187, 0, 3.2697, 0])
 
 initial_position = np.array([[0, 0],
                              [8, 56],
@@ -59,7 +59,7 @@ start_time = time.time()
 # PSO initialization
 
 method = 0
-pso = PSOEnvironment(resolution, ys, method, initial_seed=8, initial_position=initial_position,
+pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position,
                      reward_function='inc_mse', type_error='contamination')
 
 # Gaussian process initialization
@@ -71,7 +71,7 @@ import matplotlib.pyplot as plt
 error_vec = []
 last_error = []
 
-for i in range(1):
+for i in range(10):
 
     done = False
     state = pso.reset()
@@ -122,7 +122,7 @@ for i in range(1):
 
 
 X_test, secure, bench_function, grid_min, sigma, \
-mu, error_data, it, part_ant, y_data, grid, bench_max = pso.data_out()
+mu, error_data, it, part_ant, y_data, grid = pso.data_out()
 plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
 plot.plot_classic(mu, sigma, part_ant)
 # plot.gaussian(mu, sigma, part_ant)
