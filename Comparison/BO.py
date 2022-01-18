@@ -34,9 +34,11 @@ def model_psogp(c1, c2, c3, c4):
                          reward_function='inc_mse', type_error='contamination')
 
     last_error = []
+    print('in')
 
     for i in range(200):
 
+        print(i)
         done = False
         state = pso.reset()
         R_vec = []

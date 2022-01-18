@@ -498,13 +498,16 @@ class PSOEnvironment(gym.Env):
         if self.type_error == 'all_map':
             self.error = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
         elif self.type_error == 'contamination':
-            for i in range(len(self.X_test)):
-                di = self.X_test[i]
-                dix = di[0]
-                diy = di[1]
-                if dix == self.coordinate_bench_max[0] and diy == self.coordinate_bench_max[1]:
-                    mu_max = self.mu[i]
-                    break
+            index_mu_max = [i for i in range(len(self.X_test)) if (self.X_test[i] == self.coordinate_bench_max).all()]
+            index_mu_max = index_mu_max[0]
+            # for i in range(len(self.X_test)):
+            #     di = self.X_test[i]
+            #     dix = di[0]
+            #     diy = di[1]
+            #     if dix == self.coordinate_bench_max[0] and diy == self.coordinate_bench_max[1]:
+            #         mu_max = self.mu[i]
+            #         break
+            mu_max = self.mu[index_mu_max]
             mu_max = mu_max[0]
             # print(mu_max)
             self.error = self.bench_max - mu_max
@@ -549,6 +552,8 @@ class PSOEnvironment(gym.Env):
 
         while dis_steps < 10:
 
+            previous_dist = np.max(self.distances)
+
             for part in self.pop:
                 self.toolbox.update(action[0], action[1], action[2], action[3], part)
 
@@ -587,16 +592,19 @@ class PSOEnvironment(gym.Env):
                 self.ok = False
 
             dis_steps = np.mean(self.distances) - dist_ant
+            if np.max(self.distances) == previous_dist:
+                break
 
-            self.save_data()
+            # self.save_data()
             self.g += 1
+
 
         self.return_state()
 
         reward = self.calculate_reward()
-        self.ERROR_data = self.calculate_error()
-        self.error_comparison.append(self.ERROR_data)
-        self.error_distance.append(np.max(self.distances))
+        # self.ERROR_data = self.calculate_error()
+        # self.error_comparison.append(self.ERROR_data)
+        # self.error_distance.append(np.max(self.distances))
 
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
         # print(self.logbook.stream)
