@@ -57,7 +57,7 @@ start_time = time.time()
 
 method = 0
 pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position,
-                     reward_function='inc_mse')
+                     reward_function='inc_mse', type_error='contamination')
 
 # Gaussian process initialization
 

@@ -54,6 +54,8 @@ class PSOEnvironment(gym.Env):
         self.wmax = 0.9 / (15000 / ys)
         self.xs = int(10000 / (15000 / ys))
         self.ys = ys
+        self.max_peaks_bench = list()
+        self.max_peaks_mu = list()
         ker = RBF(length_scale=10, length_scale_bounds=(1e-1, 10))
         self.gpr = GaussianProcessRegressor(kernel=ker, alpha=1e-6)  # optimizer=None)
         self.x_h = []
@@ -77,6 +79,7 @@ class PSOEnvironment(gym.Env):
         self.n_data = 1
         self.num = 0
         self.save = 0
+        self.num_of_peaks = 0
         self.save_dist = [25, 50, 75, 100, 125, 150, 175, 200]
         self.seed = initial_seed
         self.mu = []
@@ -94,6 +97,7 @@ class PSOEnvironment(gym.Env):
         self.bench_max = 0
         self.method = method
         self.error = []
+        self.peaks = None
         self.ERROR_data = []
         self.error_comparison = []
         self.error_comparison1 = []
@@ -229,7 +233,7 @@ class PSOEnvironment(gym.Env):
         Initialization of the pso.
         """
         self.reset_variables()
-        self.bench_function, self.bench_array = Benchmark_function(self.grid_or, self.resolution, self.xs, self.ys,
+        self.bench_function, self.bench_array, self.num_of_peaks = Benchmark_function(self.grid_or, self.resolution, self.xs, self.ys,
                                                                    self.seed).create_new_map()
         self.max_contamination()
         self.generatePart()
@@ -237,6 +241,7 @@ class PSOEnvironment(gym.Env):
         random.seed(self.seed)
         self.swarm()
         self.statistic()
+        self.peaks_bench()
         self.state = self.first_values()
         return self.state
 
@@ -263,6 +268,8 @@ class PSOEnvironment(gym.Env):
         self.coordinate_bench_max = []
         self.n_data = 1
         self.mu = []
+        self.max_peaks_bench = list()
+        self.max_peaks_mu = list()
         self.p = 0
         self.sigma = []
         self.post_array = np.array([1, 1, 1, 1])
@@ -351,6 +358,22 @@ class PSOEnvironment(gym.Env):
                     self.sigma_data.append(self.sigma[i])
 
         return self.post_array
+
+    def sort_index(self, array, rev=True):
+        index = range(len(array))
+        s = sorted(index, reverse=rev, key=lambda i: array[i])
+        return s
+
+    def peaks_bench(self):
+        self.peaks = self.sort_index(self.bench_array)[:self.num_of_peaks]
+        for i in range(len(self.peaks)):
+            self.max_peaks_bench.append(self.bench_array[self.peaks[i]])
+
+    def peaks_mu(self):
+        self.max_peaks_mu = list()
+        for i in range(len(self.peaks)):
+            max_mu = self.mu[self.peaks[i]]
+            self.max_peaks_mu.append(max_mu[0])
 
     def sigma_max(self):
 
@@ -497,7 +520,7 @@ class PSOEnvironment(gym.Env):
     def calculate_error(self):
         if self.type_error == 'all_map':
             self.error = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
-        elif self.type_error == 'contamination':
+        elif self.type_error == 'contamination_1':
             index_mu_max = [i for i in range(len(self.X_test)) if (self.X_test[i] == self.coordinate_bench_max).all()]
             index_mu_max = index_mu_max[0]
             # for i in range(len(self.X_test)):
@@ -511,6 +534,11 @@ class PSOEnvironment(gym.Env):
             mu_max = mu_max[0]
             # print(mu_max)
             self.error = self.bench_max - mu_max
+        elif self.type_error == 'contamination':
+            #print(self.num_of_peaks, self.max_peaks_bench, self.max_peaks_mu)
+            #print(self.peaks)
+            self.peaks_mu()
+            self.error = mean_squared_error(y_true=self.max_peaks_bench, y_pred=self.max_peaks_mu)
         return self.error
 
     def step(self, action):
@@ -547,6 +575,7 @@ class PSOEnvironment(gym.Env):
         """
         dis_steps = 0
         dist_ant = np.mean(self.distances)
+        dist_pre = np.max(self.distances)
         self.n_data = 1
         self.f += 1
 
@@ -609,7 +638,7 @@ class PSOEnvironment(gym.Env):
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
         # print(self.logbook.stream)
 
-        if ((self.distances) >= 150).any():
+        if ((self.distances) >= 150).any() or np.max(self.distances) == dist_pre:
             done = True
             # wb = openpyxl.Workbook()
             # hoja = wb.active

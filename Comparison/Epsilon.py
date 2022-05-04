@@ -99,12 +99,12 @@ for i in range(10):
 
         R_vec.append(-reward)
 
-    print('Time', time.time() - start_time)
+    #print('Time', time.time() - start_time)
 
-    plt.plot(epsilon_array)
+    #plt.plot(epsilon_array)
     MSE_data = np.array(pso.error_value())
-    plt.grid()
-    plt.show()
+    #plt.grid()
+    #plt.show()
     print('GT:', i)
     print('Mean:', MSE_data[-1])
 
@@ -113,8 +113,8 @@ for i in range(10):
     mu, MSE_data, it, part_ant, y_data, grid, bench_max = pso.data_out()
     plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
     # plot.gaussian(mu, sigma, part_ant)
-    plot.plot_classic(mu, sigma, part_ant)
+    #plot.plot_classic(mu, sigma, part_ant)
     # plot.benchmark()
-    plot.error(MSE_data, it)
-    pso.save_excel()
+    #plot.error(MSE_data, it)
+    #pso.save_excel()
 

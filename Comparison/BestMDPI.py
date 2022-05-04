@@ -47,7 +47,7 @@ df_bounds: data of the limits of the surface where the drone can travel
 # Variables initialization
 
 
-action = np.array([2.0187, 0, 3.2697, 0])
+action = np.array([0, 0, 0, 3])
 
 initial_position = np.array([[0, 0],
                              [8, 56],
@@ -93,8 +93,8 @@ for i in range(10):
     mu, MSE_data, it, part_ant, y_data, grid, bench_max = pso.data_out()
     plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
     # plot.gaussian(mu, sigma, part_ant)
-    plot.plot_classic(mu, sigma, part_ant)
-    plot.benchmark()
+    #plot.plot_classic(mu, sigma, part_ant)
+    #plot.benchmark()
     distances = pso.distances_data()
 
     #if i == 0:
@@ -104,29 +104,29 @@ for i in range(10):
 
     # last_mse.append(MSE_data[-1])
 
-    print('Time', time.time() - start_time)
+    #print('Time', time.time() - start_time)
 
-    plt.plot(R_vec)
+    #plt.plot(R_vec)
 
-    plt.grid()
-    plt.show()
+    #plt.grid()
+    #plt.show()
 
     # mean_total = np.mean(np.array(last_mse))
     # std_total = np.std(np.array(last_mse))
     # conf_total = std_total * 1.96
     print('GT:', i)
     print('Mean:', error_data[-1])
-    print('Bench:', bench_max)
+    #print('Bench:', bench_max)
     # print('Std:', std_total)
     # print('Conf:', conf_total)
 
 
 X_test, secure, bench_function, grid_min, sigma, \
-mu, error_data, it, part_ant, y_data, grid = pso.data_out()
+mu, error_data, it, part_ant, y_data, grid, bench_max = pso.data_out()
 plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
-plot.plot_classic(mu, sigma, part_ant)
+#plot.plot_classic(mu, sigma, part_ant)
 # plot.gaussian(mu, sigma, part_ant)
-plot.benchmark()
-pso.save_excel()
-plot.error(error_data, it)
+#plot.benchmark()
+#pso.save_excel()
+#plot.error(error_data, it)
 

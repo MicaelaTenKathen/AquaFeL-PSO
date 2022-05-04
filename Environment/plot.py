@@ -206,7 +206,7 @@ class Plots():
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         axs[1].yaxis.set_major_formatter(ticks_y)
 
-        # plt.savefig("../Image/Contamination/GT3/Tabla_6.png")
+        plt.savefig("../Image/Contamination/GT3/Tabla_3.png")
         plt.show()
 
     @staticmethod

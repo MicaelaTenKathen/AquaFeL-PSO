@@ -8,6 +8,7 @@ import numpy as np
 from deap import benchmarks
 from skopt.benchmarks import branin as brn
 from Environment.bounds import Bounds
+import matplotlib.pyplot as plt
 
 
 class Benchmark_function():
@@ -56,9 +57,9 @@ class Benchmark_function():
 
         if self.randomize_shekel:
             #no_maxima = np.random.randint(3, 6)
-            xmin = 0
+            xmin = 5
             xmax = 10
-            ymin = 0
+            ymin = 5
             ymax = 10
 
             #for i in range(no_maxima):
@@ -66,11 +67,13 @@ class Benchmark_function():
               #  self.c.append(5)
             #self.a = np.array(self.a)
             #self.c = np.array(self.c).T
-            # num_of_peaks = np.random.RandomState(self.seed).randint(low=1, high=5)
-            num_of_peaks = 1
+            num_of_peaks = np.random.RandomState(self.seed).randint(low=2, high=6)
+            #num_of_peaks = 3
             self.a = np.random.RandomState(self.seed).random(size=(num_of_peaks, 2))
+            #self.a = np.array([[0.5, 0.5], [0.25, 0.25], [0.25, 0.75]])
+            #print(self.a)
             self.c = np.ones((num_of_peaks)) * 0.05
-            #self.a = np.array(self.a)
+            self.a = np.array(self.a)
             self.c = np.array(self.c).T
         else:
             self.a = np.array([[0.16, 1 / 1.5], [0.9, 0.2 / 1.5]])
@@ -79,11 +82,25 @@ class Benchmark_function():
         X = np.linspace(0, 1, self.grid.shape[1])
         Y = np.linspace(0, 1, self.grid.shape[0])
         X, Y = np.meshgrid(X, Y)
+        map_created1 = np.zeros(X.shape)
+
+        for i in range(X.shape[0]):
+            for j in range(X.shape[1]):
+                map_created1[i,j] = self.shekel_arg((X[i,j], Y[i,j]))
         map_created = np.fromiter(map(self.shekel_arg, zip(X.flat, Y.flat, self.grid.flat)), dtype=np.float,
                         count=X.shape[0] * X.shape[1]).reshape(X.shape)
         meanz = np.nanmean(map_created)
         stdz = np.nanstd(map_created)
         map_created = (map_created - meanz) / stdz
+        #fig = plt.figure()
+        #ax1 = fig.add_subplot(111)
+        #im4 = ax1.imshow(map_created.T, interpolation='bilinear', origin='lower', cmap="jet")
+        #plt.show()
+        #print(map_created1[50, 67])
+        #index = range(len(map_created))
+        #map1 = np.reshape(map_created, (-1, 1))
+        #s = sorted(index, reverse=True, key=lambda i: map1[i])
+        #print(s[:num_of_peaks], self.c, map1)
 
         #df_bounds, X_test_or = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
 
@@ -99,7 +116,7 @@ class Benchmark_function():
 
         bench_function_or = np.array(bench)
 
-        return map_created, bench_function_or
+        return map_created, bench_function_or, num_of_peaks
 
 
 class GroundTruth:
