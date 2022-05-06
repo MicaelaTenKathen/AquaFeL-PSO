@@ -12,10 +12,11 @@ import matplotlib.pyplot as plt
 
 
 class Benchmark_function():
-    def __init__(self, grid, resolution, xs, ys, initial_seed, w_ostacles=False, obstacles_on=False,
+    def __init__(self, grid, resolution, xs, ys, X_test, initial_seed, w_ostacles=False, obstacles_on=False,
                  randomize_shekel=True):
         self.w_obstacles = w_ostacles
         self.grid = grid
+        self.X_test = X_test
         self.resolution = resolution
         self.obstacles_on = obstacles_on
         self.randomize_shekel = randomize_shekel
@@ -23,6 +24,7 @@ class Benchmark_function():
         self.ys = ys
         self.a = []
         self.c = []
+        self.a1 = list()
         self.bench = list()
         self.seed = initial_seed
         return
@@ -71,10 +73,20 @@ class Benchmark_function():
             #num_of_peaks = 3
             self.a = np.random.RandomState(self.seed).random(size=(num_of_peaks, 2))
             #self.a = np.array([[0.5, 0.5], [0.25, 0.25], [0.25, 0.75]])
-            #print(self.a)
+            print(self.a)
             self.c = np.ones((num_of_peaks)) * 0.05
             self.a = np.array(self.a)
             self.c = np.array(self.c).T
+
+            index_a = np.random.RandomState(self.seed).random(size=(num_of_peaks, 1))
+            index_a = index_a * len(self.X_test)
+            index_a = index_a.flat
+            print(index_a)
+            for i in range(len(index_a)):
+                self.a1.append(self.X_test[round(index_a[i])])
+            self.a1 = np.array(self.a1)
+            print(self.a1)
+
         else:
             self.a = np.array([[0.16, 1 / 1.5], [0.9, 0.2 / 1.5]])
             self.c = np.array([0.15, 0.15]).T
@@ -82,11 +94,11 @@ class Benchmark_function():
         X = np.linspace(0, 1, self.grid.shape[1])
         Y = np.linspace(0, 1, self.grid.shape[0])
         X, Y = np.meshgrid(X, Y)
-        map_created1 = np.zeros(X.shape)
+        #map_created1 = np.zeros(X.shape)
 
-        for i in range(X.shape[0]):
-            for j in range(X.shape[1]):
-                map_created1[i,j] = self.shekel_arg((X[i,j], Y[i,j]))
+        #for i in range(X.shape[0]):
+         #   for j in range(X.shape[1]):
+          #      map_created1[i,j] = self.shekel_arg((X[i,j], Y[i,j]))
         map_created = np.fromiter(map(self.shekel_arg, zip(X.flat, Y.flat, self.grid.flat)), dtype=np.float,
                         count=X.shape[0] * X.shape[1]).reshape(X.shape)
         meanz = np.nanmean(map_created)
@@ -96,6 +108,7 @@ class Benchmark_function():
         #ax1 = fig.add_subplot(111)
         #im4 = ax1.imshow(map_created.T, interpolation='bilinear', origin='lower', cmap="jet")
         #plt.show()
+        #print(X.shape)
         #print(map_created1[50, 67])
         #index = range(len(map_created))
         #map1 = np.reshape(map_created, (-1, 1))

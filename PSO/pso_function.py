@@ -234,7 +234,7 @@ class PSOEnvironment(gym.Env):
         """
         self.reset_variables()
         self.bench_function, self.bench_array, self.num_of_peaks = Benchmark_function(self.grid_or, self.resolution, self.xs, self.ys,
-                                                                   self.seed).create_new_map()
+                                                                   self.X_test, self.seed).create_new_map()
         self.max_contamination()
         self.generatePart()
         self.tool()
