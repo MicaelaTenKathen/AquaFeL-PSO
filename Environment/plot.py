@@ -23,8 +23,8 @@ class Plots():
         for i in range(len(self.X_test)):
             Z_un[self.X_test[i][0], self.X_test[i][1]] = sigma[i]
             Z_mean[self.X_test[i][0], self.X_test[i][1]] = mu[i]
-        Z_un[Z_un == 0] = np.nan
-        Z_mean[Z_mean == 0] = np.nan
+        Z_un[self.grid == 0] = np.nan
+        Z_mean[self.grid == 0] = np.nan
         return Z_un, Z_mean
 
     def state_sigma_mu(self, mu, sigma, state):

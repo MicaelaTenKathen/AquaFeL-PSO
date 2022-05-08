@@ -97,7 +97,8 @@ class PSOEnvironment(gym.Env):
         self.bench_max = 0
         self.method = method
         self.error = []
-        self.peaks = None
+        self.index_a = list()
+        self.peaks = list()
         self.ERROR_data = []
         self.error_comparison = []
         self.error_comparison1 = []
@@ -233,8 +234,11 @@ class PSOEnvironment(gym.Env):
         Initialization of the pso.
         """
         self.reset_variables()
-        self.bench_function, self.bench_array, self.num_of_peaks = Benchmark_function(self.grid_or, self.resolution, self.xs, self.ys,
-                                                                   self.X_test, self.seed).create_new_map()
+        self.bench_function, self.bench_array, self.num_of_peaks, self.index_a = Benchmark_function(self.grid_or,
+                                                                                                    self.resolution,
+                                                                                                    self.xs, self.ys,
+                                                                                                    self.X_test,
+                                                                                                    self.seed).create_new_map()
         self.max_contamination()
         self.generatePart()
         self.tool()
@@ -365,15 +369,19 @@ class PSOEnvironment(gym.Env):
         return s
 
     def peaks_bench(self):
-        self.peaks = self.sort_index(self.bench_array)[:self.num_of_peaks]
-        for i in range(len(self.peaks)):
-            self.max_peaks_bench.append(self.bench_array[self.peaks[i]])
+        for i in range(len(self.index_a)):
+            self.max_peaks_bench.append(self.bench_array[round(self.index_a[i])])
+            #print(round(self.index_a[i]))
+        #self.peaks = self.sort_index(self.bench_array)[:self.num_of_peaks]
+        #for i in range(len(self.peaks)):
+         #   self.max_peaks_bench.append(self.bench_array[self.peaks[i]])
 
     def peaks_mu(self):
         self.max_peaks_mu = list()
-        for i in range(len(self.peaks)):
-            max_mu = self.mu[self.peaks[i]]
-            self.max_peaks_mu.append(max_mu[0])
+        for i in range(len(self.index_a)):
+            #print(round(self.index_a[i]))
+            #print('in_here')
+            self.max_peaks_mu.append(self.mu[round(self.index_a[i])])
 
     def sigma_max(self):
 
@@ -535,9 +543,11 @@ class PSOEnvironment(gym.Env):
             # print(mu_max)
             self.error = self.bench_max - mu_max
         elif self.type_error == 'contamination':
-            #print(self.num_of_peaks, self.max_peaks_bench, self.max_peaks_mu)
-            #print(self.peaks)
+            # print(self.num_of_peaks, self.max_peaks_bench, self.max_peaks_mu)
+            # print(self.peaks)
             self.peaks_mu()
+            #print(self.max_peaks_mu)
+            #print(self.max_peaks_bench)
             self.error = mean_squared_error(y_true=self.max_peaks_bench, y_pred=self.max_peaks_mu)
         return self.error
 
@@ -626,7 +636,6 @@ class PSOEnvironment(gym.Env):
 
             # self.save_data()
             self.g += 1
-
 
         self.return_state()
 
@@ -741,4 +750,3 @@ class PSOEnvironment(gym.Env):
         # hoja8 = wb8.active
         # hoja8.append(self.mse_comparison8)
         # wb8.save('../Test/Contamination/MSE_160.xlsx')
-

@@ -7,6 +7,7 @@ repository: https://github.com/FedePeralta/BO_drones/blob/master/bin/Utils/utils
 import numpy as np
 from deap import benchmarks
 from skopt.benchmarks import branin as brn
+from sklearn.preprocessing import normalize
 from Environment.bounds import Bounds
 import matplotlib.pyplot as plt
 
@@ -71,39 +72,55 @@ class Benchmark_function():
             #self.c = np.array(self.c).T
             num_of_peaks = np.random.RandomState(self.seed).randint(low=2, high=6)
             #num_of_peaks = 3
-            self.a = np.random.RandomState(self.seed).random(size=(num_of_peaks, 2))
+            self.a1 = np.random.RandomState(self.seed).random(size=(num_of_peaks, 2))
             #self.a = np.array([[0.5, 0.5], [0.25, 0.25], [0.25, 0.75]])
-            print(self.a)
-            self.c = np.ones((num_of_peaks)) * 0.05
-            self.a = np.array(self.a)
-            self.c = np.array(self.c).T
+            #print(self.a)
+            #self.c = np.ones((num_of_peaks)) * 40 + 10
+            self.c = np.random.RandomState(self.seed).rand(num_of_peaks, 1) * 100 + 60
+            self.a1 = np.array(self.a1)
+            #self.c = np.array(self.c).T
 
             index_a = np.random.RandomState(self.seed).random(size=(num_of_peaks, 1))
             index_a = index_a * len(self.X_test)
             index_a = index_a.flat
             print(index_a)
             for i in range(len(index_a)):
-                self.a1.append(self.X_test[round(index_a[i])])
-            self.a1 = np.array(self.a1)
-            print(self.a1)
+                arr = self.X_test[round(index_a[i])]
+                arr = arr[::-1]
+                self.a.append(arr)
+            self.a = np.array(self.a)
+            print(self.a)
 
         else:
             self.a = np.array([[0.16, 1 / 1.5], [0.9, 0.2 / 1.5]])
             self.c = np.array([0.15, 0.15]).T
 
-        X = np.linspace(0, 1, self.grid.shape[1])
-        Y = np.linspace(0, 1, self.grid.shape[0])
-        X, Y = np.meshgrid(X, Y)
+        X1 = np.arange(0, self.grid.shape[1], self.resolution)
+        Y1 = np.arange(0, self.grid.shape[0], self.resolution)
+        X1, Y1 = np.meshgrid(X1, Y1)
+        # map_created1 = np.zeros(X.shape)
+        #map_created = np.zeros((self.grid.shape[0], self.grid.shape[1]))
+
+        #for i in range(map_created.shape[1]):
+         #   for j in range(map_created.shape[0]):
+          #      map_created[j, i] = self.shekel_arg((j, i))
+        map_created1 = np.fromiter(map(self.shekel_arg, zip(X1.flat, Y1.flat)), dtype=np.float32,
+                                  count=X1.shape[0] * X1.shape[1]).reshape(X1.shape)
+
+        #X = np.linspace(0, 1, self.grid.shape[1])
+        #Y = np.linspace(0, 1, self.grid.shape[0])
+        #X, Y = np.meshgrid(X, Y)
+        print(np.where(map_created1 == np.max(map_created1)))
         #map_created1 = np.zeros(X.shape)
 
         #for i in range(X.shape[0]):
          #   for j in range(X.shape[1]):
           #      map_created1[i,j] = self.shekel_arg((X[i,j], Y[i,j]))
-        map_created = np.fromiter(map(self.shekel_arg, zip(X.flat, Y.flat, self.grid.flat)), dtype=np.float,
-                        count=X.shape[0] * X.shape[1]).reshape(X.shape)
-        meanz = np.nanmean(map_created)
-        stdz = np.nanstd(map_created)
-        map_created = (map_created - meanz) / stdz
+        #map_created = np.fromiter(map(self.shekel_arg, zip(X.flat, Y.flat, self.grid.flat)), dtype=np.float,
+         #               count=X.shape[0] * X.shape[1]).reshape(X.shape)
+        meanz = np.nanmean(map_created1)
+        stdz = np.nanstd(map_created1)
+        map_created = (map_created1 - meanz) / stdz
         #fig = plt.figure()
         #ax1 = fig.add_subplot(111)
         #im4 = ax1.imshow(map_created.T, interpolation='bilinear', origin='lower', cmap="jet")
@@ -129,7 +146,7 @@ class Benchmark_function():
 
         bench_function_or = np.array(bench)
 
-        return map_created, bench_function_or, num_of_peaks
+        return map_created, bench_function_or, num_of_peaks, index_a
 
 
 class GroundTruth:

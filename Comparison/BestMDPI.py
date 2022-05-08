@@ -71,7 +71,7 @@ import matplotlib.pyplot as plt
 error_vec = []
 last_error = []
 
-for i in range(1):
+for i in range(10):
 
     done = False
     state = pso.reset()
@@ -94,7 +94,7 @@ for i in range(1):
     plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
     # plot.gaussian(mu, sigma, part_ant)
     #plot.plot_classic(mu, sigma, part_ant)
-    #plot.benchmark()
+    plot.benchmark()
     distances = pso.distances_data()
 
     #if i == 0:
@@ -126,7 +126,7 @@ mu, error_data, it, part_ant, y_data, grid, bench_max = pso.data_out()
 plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
 plot.plot_classic(mu, sigma, part_ant)
 #plot.gaussian(mu, sigma, part_ant)
-#plot.benchmark()
+plot.benchmark()
 #pso.save_excel()
 #plot.error(error_data, it)
 
