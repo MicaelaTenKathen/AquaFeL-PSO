@@ -49,7 +49,7 @@ def comparison(meanbl, confbl, meanbg, confbg, meanun, confun, meancon, confcon,
 
     #ax.legend(loc=1, fontsize=6)
     ax.grid(True)
-    plt.savefig("../Image/Error/MSE.png")
+    #plt.savefig("../Image/Error/MSE.png")
 
 mse_mean_bl = list()
 mse_conf_bl = list()
