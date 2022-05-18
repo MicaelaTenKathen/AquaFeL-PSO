@@ -129,6 +129,7 @@ class PSOEnvironment(gym.Env):
 
         self.df_bounds, self.X_test = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
         self.secure, self.df_bounds = Bounds(self.resolution, self.xs, self.ys).interest_area()
+
         # self.secure = navigation_map
         # print(self.secure)
         self.X_test_y = self.X_test[1]
@@ -634,7 +635,7 @@ class PSOEnvironment(gym.Env):
             if np.max(self.distances) == previous_dist:
                 break
 
-            # self.save_data()
+            self.save_data()
             self.g += 1
 
         self.return_state()
@@ -707,6 +708,9 @@ class PSOEnvironment(gym.Env):
     def error_value(self):
         return self.error_data
 
+    def return_seed(self):
+        return self.seed
+
     def distances_data(self):
         return self.distances
 
@@ -714,37 +718,37 @@ class PSOEnvironment(gym.Env):
         wb = openpyxl.Workbook()
         hoja = wb.active
         hoja.append(self.error_comparison1)
-        wb.save('../Test/BO/Error_25.xlsx')
+        wb.save('../Test/Chapter/Epsilon/ALLCONError_25.xlsx')
 
         wb2 = openpyxl.Workbook()
         hoja2 = wb2.active
         hoja2.append(self.error_comparison2)
-        wb2.save('../Test/BO/Error_50.xlsx')
+        wb2.save('../Test/Chapter/Epsilon/ALLCONError_50.xlsx')
 
         wb3 = openpyxl.Workbook()
         hoja3 = wb3.active
         hoja3.append(self.error_comparison3)
-        wb3.save('../Test/BO/Error_75.xlsx')
+        wb3.save('../Test/Chapter/Epsilon/ALLCONError_75.xlsx')
 
         wb4 = openpyxl.Workbook()
         hoja4 = wb4.active
         hoja4.append(self.error_comparison4)
-        wb4.save('../Test/BO/Error_100.xlsx')
+        wb4.save('../Test/Chapter/Epsilon/ALLCONError_100.xlsx')
 
         wb5 = openpyxl.Workbook()
         hoja5 = wb5.active
         hoja5.append(self.error_comparison5)
-        wb5.save('../Test/BO/Error_125.xlsx')
+        wb5.save('../Test/Chapter/Epsilon/ALLCONError_125.xlsx')
 
         wb6 = openpyxl.Workbook()
         hoja6 = wb6.active
         hoja6.append(self.error_comparison6)
-        wb6.save('../Test/BO/Error_150.xlsx')
+        wb6.save('../Test/Chapter/Epsilon/ALLCONError_150.xlsx')
 
         wb7 = openpyxl.Workbook()
         hoja7 = wb7.active
         hoja7.append(self.error_comparison7)
-        wb7.save('../Test/BO/ErrorE_175.xlsx')
+        wb7.save('../Test/Chapter/Epsilon/ALLCONErrorE_175.xlsx')
 
         # wb8 = openpyxl.Workbook()
         # hoja8 = wb8.active

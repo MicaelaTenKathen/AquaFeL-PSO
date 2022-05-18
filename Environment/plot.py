@@ -155,12 +155,24 @@ class Plots():
         Z_var, Z_mean = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).Z_var_mean(
             mu, sigma)
         fig, axs = plt.subplots(2, 1, figsize=(5, 10))
-
+        initial_x = list()
+        initial_y = list()
+        final_x = list()
+        final_y = list()
+        for i in range(part_ant.shape[1]):
+            if i % 2 == 0:
+                initial_x.append(part_ant[0, i])
+                final_x.append(part_ant[-1, i])
+            else:
+                initial_y.append(part_ant[0, i])
+                final_y.append(part_ant[-1, i])
         self.plot_trajectory_classic(axs[0], part_ant[:, 0], part_ant[:, 1], colormap='winter')
         self.plot_trajectory_classic(axs[0], part_ant[:, 2], part_ant[:, 3], colormap='Wistia')
         self.plot_trajectory_classic(axs[0], part_ant[:, 4], part_ant[:, 5], colormap='Purples')
         self.plot_trajectory_classic(axs[0], part_ant[:, 6], part_ant[:, 7], colormap='Reds')
-
+        axs[0].plot(initial_x, initial_y, 'o', color='black', markersize=3, label='ASVs initial positions')
+        axs[0].plot(final_x, final_y, 'X', color='red', markersize=3, label='ASVs final positions')
+        axs[0].legend(loc=3, fontsize=6)
         # im1 = axs[0].scatter(x_ga, y_ga, c=n, cmap="gist_rainbow", marker='.')
         # p1x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 0]))
         # p1y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 1]))
@@ -249,7 +261,6 @@ class Plots():
     @staticmethod
     def plot_trajectory_classic(ax, x, y, z=None, colormap='jet', linewidth=1, plot_waypoints=True,
                         markersize=0.5):
-
         if z is None:
             points = np.array([x, y]).T.reshape(-1, 1, 2)
             segments = np.concatenate([points[:-2], points[1:-1], points[2:]], axis=1)

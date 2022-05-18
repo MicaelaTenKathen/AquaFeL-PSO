@@ -55,6 +55,8 @@ start_time = time.time()
 
 # PSO initialization
 
+seed = 1000001
+seed_epsilon = 1000000
 method = 0
 pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position,
                      reward_function='inc_mse', type_error='contamination')
@@ -73,25 +75,29 @@ for i in range(10):
     done = False
     state = pso.reset()
     R_vec = []
-    delta_epsilon = 0.116
+    delta_epsilon = 0.18
     epsilon_array = []
 
     # Main part of the code
 
     while not done:
+        seed_epsilon += 1
         distances_array = pso.distances_data()
         distances = np.max(distances_array)
-        if distances <= 30:
+        if distances <= 50:
             epsilon = 0.95
-        elif distances >= 120:
+        elif distances >= 100:
             epsilon = 0.05
         else:
             epsilon = epsilon_ant - delta_epsilon
-        val = np.random.rand()
+        val = np.random.RandomState(seed_epsilon).rand()
+        #print(val)
         if epsilon >= val:
-            action = np.array([1, 4, 4, 1])
+            action = np.array([2.0187, 0, 3.2697, 0])
+            #action = np.array([1, 4, 4, 1])
         else:
-            action = np.array([4, 1, 1, 4])
+            action = np.array([3.6845, 1.5614, 0, 3.1262])
+            #action = np.array([2, 1, 1, 4])
         epsilon_array.append(epsilon)
         epsilon_ant = epsilon
 
@@ -109,12 +115,12 @@ for i in range(10):
     print('Mean:', MSE_data[-1])
 
 
-    X_test, secure, bench_function, grid_min, sigma, \
-    mu, MSE_data, it, part_ant, y_data, grid, bench_max = pso.data_out()
-    plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
-    # plot.gaussian(mu, sigma, part_ant)
-    #plot.plot_classic(mu, sigma, part_ant)
-    # plot.benchmark()
-    #plot.error(MSE_data, it)
-    #pso.save_excel()
+X_test, secure, bench_function, grid_min, sigma, \
+mu, MSE_data, it, part_ant, y_data, grid, bench_max = pso.data_out()
+plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
+# plot.gaussian(mu, sigma, part_ant)
+#plot.plot_classic(mu, sigma, part_ant)
+# plot.benchmark()
+#plot.error(MSE_data, it)
+pso.save_excel()
 

@@ -10,6 +10,9 @@ from skopt.benchmarks import branin as brn
 from sklearn.preprocessing import normalize
 from Environment.bounds import Bounds
 import matplotlib.pyplot as plt
+from scipy.signal import find_peaks
+from Environment.peaks_zones import ZonesPeaks
+import random
 
 
 class Benchmark_function():
@@ -23,11 +26,11 @@ class Benchmark_function():
         self.randomize_shekel = randomize_shekel
         self.xs = xs
         self.ys = ys
-        self.a = []
-        self.c = []
+        self.a = list()
         self.a1 = list()
         self.bench = list()
         self.seed = initial_seed
+        self.yukyry, self.pirayu, self.sanber, self.aregua = ZonesPeaks(self.X_test).find_zones()
         return
 
     def bohachevsky_arg0(self, sol):
@@ -70,41 +73,78 @@ class Benchmark_function():
               #  self.c.append(5)
             #self.a = np.array(self.a)
             #self.c = np.array(self.c).T
-            num_of_peaks = np.random.RandomState(self.seed).randint(low=2, high=6)
-            #num_of_peaks = 3
-            self.a1 = np.random.RandomState(self.seed).random(size=(num_of_peaks, 2))
-            #self.a = np.array([[0.5, 0.5], [0.25, 0.25], [0.25, 0.75]])
+            num_of_peaks = np.random.RandomState(self.seed).randint(low=2, high=4)
+            #num_of_peaks = 1
+            #self.a1 = np.random.RandomState(self.seed).random(size=(num_of_peaks, 2))
+            #self.a = np.array([[0.5, 0.5], [0.25, 0.25], [0.25, 0.75], [0.9, 0.1]]) * 100
             #print(self.a)
-            #self.c = np.ones((num_of_peaks)) * 40 + 10
-            self.c = np.random.RandomState(self.seed).rand(num_of_peaks, 1) * 100 + 60
-            self.a1 = np.array(self.a1)
+
+            self.c = np.random.RandomState(self.seed).rand(num_of_peaks, 1) * 250 + 120
+            #self.a1 = np.array(self.a1)
             #self.c = np.array(self.c).T
 
-            index_a = np.random.RandomState(self.seed).random(size=(num_of_peaks, 1))
-            index_a = index_a * len(self.X_test)
-            index_a = index_a.flat
-            print(index_a)
-            for i in range(len(index_a)):
-                arr = self.X_test[round(index_a[i])]
-                arr = arr[::-1]
-                self.a.append(arr)
+            index_a1 = np.random.RandomState(self.seed).random(size=(num_of_peaks, 1))
+            index_a = list()
+            #index_a = index_a * len(self.X_test)
+            #index_a = index_a.flat
+            #for i in range(len(index_a)):
+                #arr = self.X_test[round(index_a[i])]
+                #arr = arr[::-1]
+                #self.a.append(arr)
+            random.seed(self.seed)
+            zone = random.sample(range(4), num_of_peaks)
+            for i in range(len(zone)):
+                if zone[i] == 0:
+                    id1 = index_a1[i] * len(self.yukyry) - 1
+                    print(id1)
+                    id2 = self.yukyry[round(id1[0])]
+                    arr = self.X_test[id2]
+                    arr = arr[::-1]
+                    self.a.append(arr)
+                    index_a.append(id2)
+                elif zone[i] == 1:
+                    id1 = index_a1[i] * len(self.pirayu) - 1
+                    id2 = self.pirayu[round(id1[0])]
+                    arr = self.X_test[id2]
+                    arr = arr[::-1]
+                    self.a.append(arr)
+                    index_a.append(id2)
+                elif zone[i] == 2:
+                    id1 = index_a1[i] * len(self.sanber) - 1
+                    id2 = self.sanber[round(id1[0])]
+                    arr = self.X_test[id2]
+                    arr = arr[::-1]
+                    self.a.append(arr)
+                    index_a.append(id2)
+                elif zone[i] == 3:
+                    id1 = index_a1[i] * len(self.aregua) - 1
+                    id2 = self.aregua[round(id1[0])]
+                    arr = self.X_test[id2]
+                    arr = arr[::-1]
+                    self.a.append(arr)
+                    index_a.append(id2)
             self.a = np.array(self.a)
+            index_a = np.array(index_a)
             print(self.a)
-
+            #self.c = np.ones((num_of_peaks)) * 250
+            #print(self.c)
         else:
-            self.a = np.array([[0.16, 1 / 1.5], [0.9, 0.2 / 1.5]])
-            self.c = np.array([0.15, 0.15]).T
+            a = 1
+            #self.a = np.array([[0.16, 1 / 1.5], [0.9, 0.2 / 1.5]])
+            #self.c = np.array([0.15, 0.15]).T
 
-        X1 = np.arange(0, self.grid.shape[1], self.resolution)
-        Y1 = np.arange(0, self.grid.shape[0], self.resolution)
+
+        X1 = np.arange(0, self.grid.shape[1], 1)
+        Y1 = np.arange(0, self.grid.shape[0], 1)
         X1, Y1 = np.meshgrid(X1, Y1)
+        #print(X1.shape)
         # map_created1 = np.zeros(X.shape)
         #map_created = np.zeros((self.grid.shape[0], self.grid.shape[1]))
 
         #for i in range(map_created.shape[1]):
          #   for j in range(map_created.shape[0]):
           #      map_created[j, i] = self.shekel_arg((j, i))
-        map_created1 = np.fromiter(map(self.shekel_arg, zip(X1.flat, Y1.flat)), dtype=np.float32,
+        map_created1 = np.fromiter(map(self.shekel_arg, zip(X1.flat, Y1.flat)), dtype=float,
                                   count=X1.shape[0] * X1.shape[1]).reshape(X1.shape)
 
         #X = np.linspace(0, 1, self.grid.shape[1])
@@ -121,6 +161,7 @@ class Benchmark_function():
         meanz = np.nanmean(map_created1)
         stdz = np.nanstd(map_created1)
         map_created = (map_created1 - meanz) / stdz
+
         #fig = plt.figure()
         #ax1 = fig.add_subplot(111)
         #im4 = ax1.imshow(map_created.T, interpolation='bilinear', origin='lower', cmap="jet")
