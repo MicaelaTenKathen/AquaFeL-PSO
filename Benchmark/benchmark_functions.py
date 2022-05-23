@@ -158,9 +158,14 @@ class Benchmark_function():
           #      map_created1[i,j] = self.shekel_arg((X[i,j], Y[i,j]))
         #map_created = np.fromiter(map(self.shekel_arg, zip(X.flat, Y.flat, self.grid.flat)), dtype=np.float,
          #               count=X.shape[0] * X.shape[1]).reshape(X.shape)
-        meanz = np.nanmean(map_created1)
-        stdz = np.nanstd(map_created1)
-        map_created = (map_created1 - meanz) / stdz
+        #meanz = np.nanmean(map_created1)
+        #stdz = np.nanstd(map_created1)
+        #map_created2 = (map_created1 - meanz) / stdz
+        map_max = np.max(map_created1)
+        map_min = np.min(map_created1)
+        map_created = list(map(lambda x: (x - map_min)/(map_max - map_min), map_created1))
+        map_created = np.array(map_created)
+        #print(map_created)
 
         #fig = plt.figure()
         #ax1 = fig.add_subplot(111)

@@ -5,6 +5,7 @@ from scipy import interpolate
 from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 from Environment.map import Map
+from matplotlib.colors import LinearSegmentedColormap
 
 
 class Plots():
@@ -16,6 +17,8 @@ class Plots():
         self.bench_function = bench_function
         self.grid_min = grid_min
         self.grid_or = Map(self.xs, ys).black_white()
+        self.X1 = np.arange(0, self.grid.shape[1], 1)
+        self.Y1 = np.arange(0, self.grid.shape[0], 1)
 
     def Z_var_mean(self, mu, sigma):
         Z_un = np.zeros([self.grid.shape[0], self.grid.shape[1]])
@@ -278,3 +281,34 @@ class Plots():
             ax.scatter(x, y, z, 'k')
             if plot_waypoints:
                 ax.plot(x, y, 'kx')
+
+    def detection_areas(self, mu, sigma):
+        cmap = LinearSegmentedColormap.from_list('name', ['green', 'yellow', 'red'])
+        Z_var, Z_mean = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).Z_var_mean(
+            mu, sigma)
+
+        fig, axs = plt.subplots()
+
+        im3 = axs.imshow(Z_mean.T, interpolation='none', origin='lower', cmap=cmap)
+        plt.colorbar(im3, ax=axs, label='µ', shrink=1.0)
+        axs.set_xlabel("x [m]")
+        axs.set_ylabel("y [m]")
+        axs.set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
+        axs.set_xticks([0, 50, 100])
+        axs.set_ylim([self.ys, 0])
+        axs.set_aspect('equal')
+        axs.grid(True)
+        ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        axs.xaxis.set_major_formatter(ticks_x)
+
+        ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        axs.yaxis.set_major_formatter(ticks_y)
+
+        #cax = ax.contourf(self.Y1, self.X1, Z_mean.T, cmap=cmap)
+        #cbar = fig.colorbar(cax)
+        #cbar.set_label('Z-Values')
+
+        #for angle in range(0, 360):
+         #   ax.view_init(90, angle)
+
+        plt.show()

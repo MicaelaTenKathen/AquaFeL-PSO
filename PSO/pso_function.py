@@ -41,8 +41,10 @@ def createPart():
 class PSOEnvironment(gym.Env):
 
     def __init__(self, resolution, ys, method, initial_seed, initial_position, reward_function='mse',
-                 behavioral_method=0, type_error='all_map'):
+                 behavioral_method=0, type_error='all_map', stage="exploration"):
         self.type_error = type_error
+        self.stage = "exploration"
+        self.dist_pre = 0
         self.f = None
         self.k = None
         self.population = 4
@@ -552,7 +554,7 @@ class PSOEnvironment(gym.Env):
             self.error = mean_squared_error(y_true=self.max_peaks_bench, y_pred=self.max_peaks_mu)
         return self.error
 
-    def step(self, action):
+    def step_stage_exploration(self, action):
 
         """
         The output "out" of the method "step" is the positions of the particles (drones) after traveling 1000 m
@@ -586,7 +588,7 @@ class PSOEnvironment(gym.Env):
         """
         dis_steps = 0
         dist_ant = np.mean(self.distances)
-        dist_pre = np.max(self.distances)
+        self.dist_pre = np.max(self.distances)
         self.n_data = 1
         self.f += 1
 
@@ -622,7 +624,6 @@ class PSOEnvironment(gym.Env):
                     if self.n_data > 4:
                         self.n_data = 1
 
-                # self.MSE_data1, self.it = self.util.mse(self.g, self.bench_array, self.mu)
                 self.error = self.calculate_error()
                 self.error_data.append(self.error)
                 self.it.append(self.g)
@@ -641,30 +642,111 @@ class PSOEnvironment(gym.Env):
         self.return_state()
 
         reward = self.calculate_reward()
-        # self.ERROR_data = self.calculate_error()
-        # self.error_comparison.append(self.ERROR_data)
-        # self.error_distance.append(np.max(self.distances))
 
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
-        # print(self.logbook.stream)
 
-        if ((self.distances) >= 150).any() or np.max(self.distances) == dist_pre:
+        if (self.distances >= 150).any() or np.max(self.distances) == self.dist_pre:
             done = True
-            # wb = openpyxl.Workbook()
-            # hoja = wb.active
-            # # print(self.mse_comparison)
-            # hoja.append(self.mse_comparison)
-            # wb.save('../Test/Epsilon/MSE' + str(self.seed) + '.xlsx')
-            #
-            # wb1 = openpyxl.Workbook()
-            # hoja1 = wb1.active
-            # # print(self.mse_comparison)
-            # hoja1.append(self.mse_distance)
-            # wb1.save('../Test/Epsilon/Distance' + str(self.seed) + '.xlsx')
 
         else:
             done = False
+        return self.state, reward, done, {}
 
+    def step_stage_exploitation(self, action):
+
+        """
+        The output "out" of the method "step" is the positions of the particles (drones) after traveling 1000 m
+        (scaled).
+
+        method = 0 -> out = scalar vector
+        out = [px_1, py_1, px_2, py_2, px_3, py_3, px_4, py_4, lbx_1, lby_1, lbx_2, lby_2, lbx_3, lby_3, lbx_4, lby_4,
+               gbx, gby, sbx, sgy, mbx, mby]
+               where:
+               px: x coordinate of the drone position
+               py: y coordinate of the drone position
+               lbx: x coordinate of the local best
+               lby: y coordinate of the local best
+               gbx: x coordinate of the global best
+               gby: y coordinate of the global best
+               sbx: x coordinate of the sigma best (maximum uncertainty)
+               sby: y coordinate of the sigma best (maximum uncertainty)
+               mbx: x coordinate of the mean best (maximum contamination)
+               mby: y coordinate of the mean best (maximum contamination)
+
+        method = 1 -> out = images
+
+        :param c1: weight that determinate the importance of the local best component
+        :param c2: weight that determinate the importance of the global best component
+        :param c3: weight that determinate the importance of the maximum uncertainty component
+        :param c4: weight that determinate the importance of the maximum contamination component
+        :param lam: ratio of one of the different length scales [Equation 7
+        (https://doi.org/10.3390/electronics10131605)]
+        :param post_array: refers to the posterior length scale of the surrogate model [Equation 7
+        (https://doi.org/10.3390/electronics10131605)]
+        """
+        dis_steps = 0
+        dist_ant = np.mean(self.distances)
+        self.dist_pre = np.max(self.distances)
+        self.n_data = 1
+        self.f += 1
+
+        while dis_steps < 10:
+
+            previous_dist = np.max(self.distances)
+
+            for part in self.pop:
+                self.toolbox.update(action[0], action[1], action[2], action[3], part)
+
+            for part in self.pop:
+                self.ok, part = self.pso_fitness(part)
+                self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant,
+                                                                        self.distances, self.array_part, dfirst=False)
+
+                self.n_data += 1
+                if self.n_data > 4:
+                    self.n_data = 1
+
+            if (np.mean(self.distances) - self.last_sample) >= (np.min(self.post_array) * self.lam):
+                self.k += 1
+                self.ok = True
+                self.last_sample = np.mean(self.distances)
+
+                for part in self.pop:
+                    self.ok, part = self.pso_fitness(part)
+
+                    self.post_array = self.gp_regression()
+
+                    self.samples += 1
+
+                    self.n_data += 1
+                    if self.n_data > 4:
+                        self.n_data = 1
+
+                self.error = self.calculate_error()
+                self.error_data.append(self.error)
+                self.it.append(self.g)
+
+                self.sigma_best, self.mu_best = self.sigma_max()
+
+                self.ok = False
+
+            dis_steps = np.mean(self.distances) - dist_ant
+            if np.max(self.distances) == previous_dist:
+                break
+
+            self.save_data()
+            self.g += 1
+
+        self.return_state()
+
+        reward = self.calculate_reward()
+
+        self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
+
+        if (self.distances >= 150).any() or np.max(self.distances) == self.dist_pre:
+            done = True
+        else:
+            done = False
         return self.state, reward, done, {}
 
     def return_state(self):
@@ -695,6 +777,19 @@ class PSOEnvironment(gym.Env):
             self.n_data += 1
             if self.n_data > 4:
                 self.n_data = 1
+
+    def step(self, action):
+        if self.stage == "exploration":
+            action = np.array([2.0187, 0, 3.2697, 0])
+            self.state, reward, done, dic = self.step_stage_exploration(action)
+            if (self.distances >= 100).any() or np.max(self.distances) == self.dist_pre:
+                self.stage = "exploitation"
+        elif self.stage == "exploitation":
+            action = np.array([3.6845, 1.5614, 0, 3.1262])
+
+
+
+
 
     def data_out(self):
 
