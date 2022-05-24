@@ -6,6 +6,8 @@ from Environment.map import Map
 from Benchmark.benchmark_functions import Benchmark_function
 from Environment.bounds import Bounds
 from Data.utils import Utils
+from Environment.contamination_areas import DetectContaminationAreas
+from Environment.plot import Plots
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
@@ -131,13 +133,14 @@ class PSOEnvironment(gym.Env):
 
         self.df_bounds, self.X_test = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
         self.secure, self.df_bounds = Bounds(self.resolution, self.xs, self.ys).interest_area()
+        self.detect_areas = DetectContaminationAreas(self.X_test, vehicles=2, area=100)
 
         # self.secure = navigation_map
         # print(self.secure)
         self.X_test_y = self.X_test[1]
         self.bench_function = None
 
-        self.plot = Plots(self.xs, self.ys, self.X_test, self.secure, self.bench_function, self.grid_min)
+        self.plot = Plots(self.xs, self.ys, self.X_test, self.secure, self.bench_function, self.grid_min, self.grid_or)
 
         # self.action_space = gym.spaces.Box(low=0.0, high=4.0, shape=(4,))
         # self.state_space = gym.spaces.Box()
@@ -647,7 +650,12 @@ class PSOEnvironment(gym.Env):
 
         if (self.distances >= 150).any() or np.max(self.distances) == self.dist_pre:
             done = True
-
+            dict_, dict_coord_, dict_impo_, k = self.detect_areas.areas_levels(self.mu)
+            j = 0
+            #while j < k:
+             #   j += 1
+              #  print(dict_["action_zone%s" % j], dict_coord_["action_zone%s" % j], dict_impo_["action_zone%s" % j])
+            self.plot.action_areas(dict_coord_, dict_impo_, k)
         else:
             done = False
         return self.state, reward, done, {}
@@ -786,10 +794,8 @@ class PSOEnvironment(gym.Env):
                 self.stage = "exploitation"
         elif self.stage == "exploitation":
             action = np.array([3.6845, 1.5614, 0, 3.1262])
-
-
-
-
+            self.state, reward, done, dic = self.step_stage_exploitation(action)
+        return self.state, reward, done, {}
 
     def data_out(self):
 
@@ -845,7 +851,3 @@ class PSOEnvironment(gym.Env):
         hoja7.append(self.error_comparison7)
         wb7.save('../Test/Chapter/Epsilon/ALLCONErrorE_175.xlsx')
 
-        # wb8 = openpyxl.Workbook()
-        # hoja8 = wb8.active
-        # hoja8.append(self.mse_comparison8)
-        # wb8.save('../Test/Contamination/MSE_160.xlsx')

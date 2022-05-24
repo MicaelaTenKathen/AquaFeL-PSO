@@ -47,8 +47,8 @@ df_bounds: data of the limits of the surface where the drone can travel
 # Variables initialization
 
 
-action = np.array([3.6845, 1.5614, 0, 3.1262]) # Syracuse (Exploitation)
-#action = np.array([2.0187, 0, 3.2697, 0]) #Rome (Exploration)
+#action = np.array([3.6845, 1.5614, 0, 3.1262]) # Syracuse (Exploitation)
+action = np.array([2.0187, 0, 3.2697, 0]) #Rome (Exploration)
 #action = np.array([0, 0, 0, 3])
 
 initial_position = np.array([[0, 0],
@@ -61,7 +61,7 @@ start_time = time.time()
 # PSO initialization
 
 method = 0
-pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position,
+pso = PSOEnvironment(resolution, ys, method, initial_seed=1000009, initial_position=initial_position,
                      reward_function='inc_mse', type_error='contamination')
 
 # Gaussian process initialization
@@ -93,7 +93,7 @@ for i in range(1):
         n = error_data.shape[0] - 1
     X_test, secure, bench_function, grid_min, sigma, \
     mu, MSE_data, it, part_ant, y_data, grid, bench_max = pso.data_out()
-    plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
+    plot = Plots(xs, ys, X_test, secure, bench_function, grid_min, grid)
     #plot.gaussian(mu, sigma, part_ant)
     #plot.plot_classic(mu, sigma, part_ant)
     plot.benchmark()
@@ -125,9 +125,10 @@ for i in range(1):
 
 X_test, secure, bench_function, grid_min, sigma, \
 mu, error_data, it, part_ant, y_data, grid, bench_max = pso.data_out()
-plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
+plot = Plots(xs, ys, X_test, secure, bench_function, grid_min, grid)
 plot.plot_classic(mu, sigma, part_ant)
 # plot.gaussian(mu, sigma, part_ant)
 plot.benchmark()
+
 #pso.save_excel()
 # plot.error(error_data, it)

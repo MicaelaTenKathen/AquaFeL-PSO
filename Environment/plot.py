@@ -9,9 +9,10 @@ from matplotlib.colors import LinearSegmentedColormap
 
 
 class Plots():
-    def __init__(self, xs, ys, X_test, grid, bench_function, grid_min):
+    def __init__(self, xs, ys, X_test, grid, bench_function, grid_min, grid_or):
         self.xs = xs
         self.ys = ys
+        self.grid_or = grid_or
         self.X_test = X_test
         self.grid = grid
         self.bench_function = bench_function
@@ -19,6 +20,7 @@ class Plots():
         self.grid_or = Map(self.xs, ys).black_white()
         self.X1 = np.arange(0, self.grid.shape[1], 1)
         self.Y1 = np.arange(0, self.grid.shape[0], 1)
+        self.cmap = LinearSegmentedColormap.from_list('name', ['green', 'yellow', 'red'])
 
     def Z_var_mean(self, mu, sigma):
         Z_un = np.zeros([self.grid.shape[0], self.grid.shape[1]])
@@ -26,8 +28,8 @@ class Plots():
         for i in range(len(self.X_test)):
             Z_un[self.X_test[i][0], self.X_test[i][1]] = sigma[i]
             Z_mean[self.X_test[i][0], self.X_test[i][1]] = mu[i]
-        Z_un[self.grid == 0] = np.nan
-        Z_mean[self.grid == 0] = np.nan
+        Z_un[self.grid_or == 0] = np.nan
+        Z_mean[self.grid_or == 0] = np.nan
         return Z_un, Z_mean
 
     def state_sigma_mu(self, mu, sigma, state):
@@ -76,7 +78,7 @@ class Plots():
         return plot, benchma_plot
 
     def gaussian(self, mu, sigma, part_ant):
-        Z_var, Z_mean = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).Z_var_mean(mu, sigma)
+        Z_var, Z_mean = self.Z_var_mean(mu, sigma)
 
         fig, axs = plt.subplots(2, 1, figsize=(5, 10))
 
@@ -136,7 +138,7 @@ class Plots():
 
     def benchmark(self):
         plot_bench = np.copy(self.bench_function)
-        plot_bench[self.grid == 0] = np.nan
+        plot_bench[self.grid_or == 0] = np.nan
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
         im4 = ax1.imshow(plot_bench.T, interpolation='bilinear', origin='lower', cmap="jet")
@@ -155,8 +157,7 @@ class Plots():
         plt.show()
 
     def plot_classic(self, mu, sigma, part_ant):
-        Z_var, Z_mean = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).Z_var_mean(
-            mu, sigma)
+        Z_var, Z_mean = self.Z_var_mean(mu, sigma)
         fig, axs = plt.subplots(2, 1, figsize=(5, 10))
         initial_x = list()
         initial_y = list()
@@ -283,13 +284,11 @@ class Plots():
                 ax.plot(x, y, 'kx')
 
     def detection_areas(self, mu, sigma):
-        cmap = LinearSegmentedColormap.from_list('name', ['green', 'yellow', 'red'])
-        Z_var, Z_mean = Plots(self.xs, self.ys, self.X_test, self.grid, self.bench_function, self.grid_min).Z_var_mean(
-            mu, sigma)
+        Z_var, Z_mean = self.Z_var_mean(mu, sigma)
 
         fig, axs = plt.subplots()
 
-        im3 = axs.imshow(Z_mean.T, interpolation='none', origin='lower', cmap=cmap)
+        im3 = axs.imshow(Z_mean.T, interpolation='none', origin='lower', cmap=self.cmap)
         plt.colorbar(im3, ax=axs, label='µ', shrink=1.0)
         axs.set_xlabel("x [m]")
         axs.set_ylabel("y [m]")
@@ -304,11 +303,34 @@ class Plots():
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         axs.yaxis.set_major_formatter(ticks_y)
 
-        #cax = ax.contourf(self.Y1, self.X1, Z_mean.T, cmap=cmap)
-        #cbar = fig.colorbar(cax)
-        #cbar.set_label('Z-Values')
-
-        #for angle in range(0, 360):
-         #   ax.view_init(90, angle)
-
         plt.show()
+
+    def action_areas(self, dict_coord_, dict_impo_, k):
+        action_zone = np.zeros([self.grid.shape[0], self.grid.shape[1]])
+        j = 0
+        while j < k:
+            j += 1
+            action_coord = list(dict_coord_["action_zone%s" % j])
+            action_impo = list(dict_impo_["action_zone%s" % j])
+            for i in range(len(action_coord)):
+                coord = action_coord[i]
+                x = coord[0]
+                y = coord[1]
+                action_zone[x, y] = action_impo[i]
+        action_zone[self.grid_or == 0] = np.nan
+        fig, axs = plt.subplots()
+        im2 = axs.imshow(action_zone.T, interpolation='none', origin='lower', cmap=self.cmap)
+        plt.colorbar(im2, ax=axs, label='Importance', shrink=1.0)
+        axs.set_xlabel("x [m]")
+        axs.set_ylabel("y [m]")
+        axs.set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
+        axs.set_xticks([0, 50, 100])
+        axs.set_aspect('equal')
+        axs.set_ylim([self.ys, 0])
+        axs.grid(True)
+        # ticks_x = ticker.FuncFormatter()
+        ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        axs.xaxis.set_major_formatter(ticks_x)
+
+        ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        axs.yaxis.set_major_formatter(ticks_y)
