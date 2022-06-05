@@ -43,9 +43,12 @@ def createPart():
 
 class PSOEnvironment(gym.Env):
 
-    def __init__(self, resolution, ys, method, initial_seed, initial_position, vehicles=4, reward_function='mse',
-                 behavioral_method=0, type_error='all_map', stage="exploration"):
+    def __init__(self, resolution, ys, method, initial_seed, initial_position, vehicles=4, exploration_distance = 100,
+                 exploitation_distance=200, reward_function='mse', behavioral_method=0, type_error='all_map',
+                 stage="exploration"):
         self.type_error = type_error
+        self.exploration_distance = exploitation_distance
+        self.exploitation_distance = exploitation_distance
         self.stage = stage
         self.dist_pre = 0
         self.f = None
@@ -838,7 +841,7 @@ class PSOEnvironment(gym.Env):
 
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
 
-        if (self.distances >= 100).any() or np.max(self.distances) == self.dist_pre:
+        if (self.distances >= self.exploration_distance).any() or np.max(self.distances) == self.dist_pre:
             done = False
             self.dict_, self.dict_coord_, self.dict_impo_, self.centers, self.coord_centers, self.dict_index, \
             self.dict_bench, self.action_zone, self.max_centers_bench, self.max_bench = self.detect_areas.areas_levels(self.mu)
@@ -974,7 +977,7 @@ class PSOEnvironment(gym.Env):
 
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
 
-        if (self.distances >= 200).any() or np.max(self.distances) == self.dist_pre:
+        if (self.distances >= self.exploitation_distance).any() or np.max(self.distances) == self.dist_pre:
             done = True
             print(self.dict_error)
             print(self.dict_error_peak)
@@ -1015,7 +1018,7 @@ class PSOEnvironment(gym.Env):
         if self.stage == "exploration":
             action = np.array([2.0187, 0, 3.2697, 0])
             self.state, reward, done, dic = self.step_stage_exploration(action)
-            if (self.distances >= 100).any() or np.max(self.distances) == self.dist_pre:
+            if (self.distances >= self.exploration_distance).any() or np.max(self.distances) == self.dist_pre:
                 self.stage = "exploitation"
         elif self.stage == "exploitation":
             action = np.array([3.6845, 1.5614, 0, 3.1262])
