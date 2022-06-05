@@ -20,6 +20,7 @@ class Plots():
         self.grid_or = Map(self.xs, ys).black_white()
         self.X1 = np.arange(0, self.grid.shape[1], 1)
         self.Y1 = np.arange(0, self.grid.shape[0], 1)
+        self.cmap1 = LinearSegmentedColormap.from_list('name', ['royalblue', 'coral', 'purple'])
         self.cmap = LinearSegmentedColormap.from_list('name', ['green', 'yellow', 'red'])
 
     def Z_var_mean(self, mu, sigma):
@@ -156,6 +157,106 @@ class Plots():
         # plt.savefig("../Image/Contamination/GT3/Ground3.png")
         plt.show()
 
+    def mu_exploitation(self, dict_mu, dict_sigma, centers):
+        cols = round(centers / 2)
+        rows = centers // cols
+        rows += centers % cols
+        position = range(1, centers + 1)
+
+        fig = plt.figure(figsize=(8, 8))
+        bottom, top = 0.1, 1.5
+        left, right = 0.1, 2.5
+
+        for k in range(centers):
+            # add every single subplot to the figure with a for loop
+            v = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
+            axs = fig.add_subplot(rows, cols, position[k])
+            matrix_sigma, matrix_mu = self.Z_var_mean(dict_mu["action_zone%s" % k], dict_sigma["action_zone%s" % k])
+            im = axs.imshow(matrix_mu.T, interpolation='bilinear', origin='lower', cmap="jet", vmin=0, vmax=1.0)
+            #cbar = plt.colorbar(im, ax=axs, label='µ', shrink=1.0, ticks=v)
+            axs.set_xlabel("x [m]")
+            axs.set_ylabel("y [m]")
+            axs.set_title("Action zone %s" % str(k + 1))
+            axs.set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
+            axs.set_xticks([0, 50, 100])
+            axs.set_aspect('equal')
+            axs.set_ylim([self.ys, 0])
+            axs.grid(True)
+            # ticks_x = ticker.FuncFormatter()
+            # print(ticks_x)
+            ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+            # print(ticks_x2)
+            axs.xaxis.set_major_formatter(ticks_x)
+
+            ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+            axs.yaxis.set_major_formatter(ticks_y)
+
+        fig.subplots_adjust(top=top, bottom=bottom, left=left, right=right, hspace=0.15, wspace=0.25)
+        cbar_ax = fig.add_axes([0.85, bottom, 0.025, 0.85])
+        fig.colorbar(im, cax=cbar_ax, label='µ', shrink=1.0)
+        plt.tight_layout()
+
+        plt.show()
+
+    def movement_exploitation(self, vehicles, dict_mu, dict_sigma, centers, dict_centers, part_ant_exploit):
+        cols = round(vehicles / 2)
+        rows = centers // cols
+        rows += centers % cols
+        position = range(1, centers + 1)
+
+        fig = plt.figure(figsize=(8, 8))
+        bottom, top = 0.1, 1.5
+        left, right = 0.1, 2.5
+
+        w = 0
+        while w < vehicles:
+            axs = fig.add_subplot(rows, cols, position[w])
+            x = 2 * w
+            y = 2 * w + 1
+
+        for i in range(len(dict_centers)):
+            matrix_sigma, matrix_mu = self.Z_var_mean(dict_mu["action_zone%s" % i], dict_sigma["action_zone%s" % i])
+            list_vehicle = dict_centers["action_zone%s" % i]
+            axs = fig.add_subplot(rows, cols, position[i])
+            for j in range(len(list_vehicle)):
+                w = list_vehicle[j]
+                x = 2 * w
+                y = 2 * w + 1
+                print(len(part_ant_exploit[:, x]))
+                print(len(part_ant_exploit[:, y]))
+                self.plot_trajectory(axs, part_ant_exploit[:, x], part_ant_exploit[:, y], z=None, colormap='winter',
+                                     num_of_points=(len(part_ant_exploit[:, 0]) * 10))
+                #self.plot_trajectory(axs[0], part_ant[:, 2], part_ant[:, 3], z=None, colormap='Wistia',
+                 #                    num_of_points=(int((part_ant[:, 0].shape)[0]) * 10))
+                #self.plot_trajectory(axs[0], part_ant[:, 4], part_ant[:, 5], z=None, colormap='Purples',
+                 #                    num_of_points=(int((part_ant[:, 0].shape)[0]) * 10))
+                #self.plot_trajectory(axs[0], part_ant[:, 6], part_ant[:, 7], z=None, colormap='Reds',
+            im = axs.imshow(matrix_sigma.T, interpolation='bilinear', origin='lower', cmap="gist_yarg", vmin=0, vmax=1.0)
+            #cbar = plt.colorbar(im, ax=axs, label='µ', shrink=1.0, ticks=v)
+            axs.set_xlabel("x [m]")
+            axs.set_ylabel("y [m]")
+            axs.set_title("Action zone %s" % str(i + 1))
+            axs.set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
+            axs.set_xticks([0, 50, 100])
+            axs.set_aspect('equal')
+            axs.set_ylim([self.ys, 0])
+            axs.grid(True)
+            # ticks_x = ticker.FuncFormatter()
+            # print(ticks_x)
+            ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+            # print(ticks_x2)
+            axs.xaxis.set_major_formatter(ticks_x)
+
+            ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+            axs.yaxis.set_major_formatter(ticks_y)
+
+        fig.subplots_adjust(top=top, bottom=bottom, left=left, right=right, hspace=0.15, wspace=0.25)
+        cbar_ax = fig.add_axes([0.85, bottom, 0.025, 0.85])
+        fig.colorbar(im, cax=cbar_ax, label='σ', shrink=1.0)
+        plt.tight_layout()
+
+        plt.show()
+
     def plot_classic(self, mu, sigma, part_ant):
         Z_var, Z_mean = self.Z_var_mean(mu, sigma)
         fig, axs = plt.subplots(2, 1, figsize=(5, 10))
@@ -284,32 +385,29 @@ class Plots():
                 ax.plot(x, y, 'kx')
 
     def detection_areas(self, mu, sigma):
-        Z_var, Z_mean = self.Z_var_mean(mu, sigma)
+        Z_var, Z_mean = self.Z_var_mean(mu * 100, sigma)
 
-        fig, axs = plt.subplots()
+        fig, ax = plt.subplots()
 
-        im3 = axs.imshow(Z_mean.T, interpolation='none', origin='lower', cmap=self.cmap)
-        plt.colorbar(im3, ax=axs, label='µ', shrink=1.0)
-        axs.set_xlabel("x [m]")
-        axs.set_ylabel("y [m]")
-        axs.set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
-        axs.set_xticks([0, 50, 100])
-        axs.set_ylim([self.ys, 0])
-        axs.set_aspect('equal')
-        axs.grid(True)
+        im3 = ax.imshow(Z_mean.T, interpolation='none', origin='lower', cmap=self.cmap)
+        plt.colorbar(im3, ax=ax, label='Contamination [%]', shrink=1.0)
+        ax.set_xlabel("x [m]")
+        ax.set_ylabel("y [m]")
+        ax.set_ylim([self.ys, 0])
+        ax.set_aspect('equal')
+        ax.grid(True)
         ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
-        axs.xaxis.set_major_formatter(ticks_x)
+        ax.xaxis.set_major_formatter(ticks_x)
 
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
-        axs.yaxis.set_major_formatter(ticks_y)
-
+        ax.yaxis.set_major_formatter(ticks_y)
+        # plt.savefig("../Image/Contamination/GT3/Ground3.png")
         plt.show()
 
     def action_areas(self, dict_coord_, dict_impo_, k):
         action_zone = np.zeros([self.grid.shape[0], self.grid.shape[1]])
         j = 0
         while j < k:
-            j += 1
             action_coord = list(dict_coord_["action_zone%s" % j])
             action_impo = list(dict_impo_["action_zone%s" % j])
             for i in range(len(action_coord)):
@@ -317,20 +415,20 @@ class Plots():
                 x = coord[0]
                 y = coord[1]
                 action_zone[x, y] = action_impo[i]
+            j += 1
         action_zone[self.grid_or == 0] = np.nan
-        fig, axs = plt.subplots()
-        im2 = axs.imshow(action_zone.T, interpolation='none', origin='lower', cmap=self.cmap)
-        plt.colorbar(im2, ax=axs, label='Importance', shrink=1.0)
-        axs.set_xlabel("x [m]")
-        axs.set_ylabel("y [m]")
-        axs.set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
-        axs.set_xticks([0, 50, 100])
-        axs.set_aspect('equal')
-        axs.set_ylim([self.ys, 0])
-        axs.grid(True)
-        # ticks_x = ticker.FuncFormatter()
+        fig, ax = plt.subplots()
+        im2 = ax.imshow(action_zone.T, interpolation='none', origin='lower', cmap=self.cmap1)
+        plt.colorbar(im2, ax=ax, label='Priority', shrink=1.0)
+        ax.set_xlabel("x [m]")
+        ax.set_ylabel("y [m]")
+        ax.set_ylim([self.ys, 0])
+        ax.set_aspect('equal')
+        ax.grid(True)
         ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
-        axs.xaxis.set_major_formatter(ticks_x)
+        ax.xaxis.set_major_formatter(ticks_x)
 
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
-        axs.yaxis.set_major_formatter(ticks_y)
+        ax.yaxis.set_major_formatter(ticks_y)
+        # plt.savefig("../Image/Contamination/GT3/Ground3.png")
+        plt.show()
