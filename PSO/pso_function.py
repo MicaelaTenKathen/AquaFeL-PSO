@@ -877,12 +877,12 @@ class PSOEnvironment(gym.Env):
                 self.n_data += 1
                 if self.n_data > 4:
                     self.n_data = 1
-            self.type_error = 'action_zone'
-            self.error = self.calculate_error(dfirts=True)
-            self.error_data.append(self.error)
-            self.it.append(self.g)
-            self.type_error = 'peaks'
-            self.error = self.calculate_error(dfirts=True)
+            #self.type_error = 'action_zone'
+            #self.error = self.calculate_error(dfirts=True)
+            #self.error_data.append(self.error)
+            #self.it.append(self.g)
+            #self.type_error = 'peaks'
+            #self.error = self.calculate_error(dfirts=True)
         else:
             done = False
         return self.state, reward, done, {}
