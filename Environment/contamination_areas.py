@@ -134,7 +134,6 @@ class DetectContaminationAreas():
             dict_impor_["action_zone%s" % j] = list_impo
             dict_index_["action_zone%s" % j] = index
             dict_bench_["action_zone%s" % j] = bench
-            print(dict_index_)
             impo -= 10
             j += 1
 

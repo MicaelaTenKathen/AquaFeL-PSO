@@ -96,7 +96,7 @@ class Benchmark_function():
             for i in range(len(zone)):
                 if zone[i] == 0:
                     id1 = index_a1[i] * len(self.yukyry) - 1
-                    print(id1)
+                    #print(id1)
                     id2 = self.yukyry[round(id1[0])]
                     arr = self.X_test[id2]
                     arr = arr[::-1]
@@ -125,7 +125,7 @@ class Benchmark_function():
                     index_a.append(id2)
             self.a = np.array(self.a)
             index_a = np.array(index_a)
-            print(self.a)
+            #print(self.a)
             #self.c = np.ones((num_of_peaks)) * 250
             #print(self.c)
         else:
@@ -150,7 +150,7 @@ class Benchmark_function():
         #X = np.linspace(0, 1, self.grid.shape[1])
         #Y = np.linspace(0, 1, self.grid.shape[0])
         #X, Y = np.meshgrid(X, Y)
-        print(np.where(map_created1 == np.max(map_created1)))
+        #print(np.where(map_created1 == np.max(map_created1)))
         #map_created1 = np.zeros(X.shape)
 
         #for i in range(X.shape[0]):

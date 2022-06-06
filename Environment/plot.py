@@ -6,6 +6,7 @@ from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 from Environment.map import Map
 from matplotlib.colors import LinearSegmentedColormap
+import copy
 
 
 class Plots():
@@ -22,6 +23,7 @@ class Plots():
         self.Y1 = np.arange(0, self.grid.shape[0], 1)
         self.cmap1 = LinearSegmentedColormap.from_list('name', ['royalblue', 'coral', 'purple'])
         self.cmap = LinearSegmentedColormap.from_list('name', ['green', 'yellow', 'red'])
+        self.cmap2 = LinearSegmentedColormap.from_list('name', ['red', 'purple'])
 
     def Z_var_mean(self, mu, sigma):
         Z_un = np.zeros([self.grid.shape[0], self.grid.shape[1]])
@@ -198,44 +200,47 @@ class Plots():
 
         plt.show()
 
-    def movement_exploitation(self, vehicles, dict_mu, dict_sigma, centers, dict_centers, part_ant_exploit):
+    def movement_exploitation(self, vehicles, dict_mu, dict_sigma, centers, dict_centers, part_ant_exploit, assig_center):
         cols = round(vehicles / 2)
-        rows = centers // cols
-        rows += centers % cols
-        position = range(1, centers + 1)
+        rows = vehicles // cols
+        rows += vehicles % cols
+        position = range(1, vehicles + 1)
+
+        dict_matrix_mu = {}
+        dict_matrix_sigma = {}
 
         fig = plt.figure(figsize=(8, 8))
         bottom, top = 0.1, 1.5
-        left, right = 0.1, 2.5
-
-        w = 0
-        while w < vehicles:
-            axs = fig.add_subplot(rows, cols, position[w])
-            x = 2 * w
-            y = 2 * w + 1
+        left, right = 0.1, 2
+        colors = ['winter', 'copper', self.cmap2, 'spring']
 
         for i in range(len(dict_centers)):
-            matrix_sigma, matrix_mu = self.Z_var_mean(dict_mu["action_zone%s" % i], dict_sigma["action_zone%s" % i])
-            list_vehicle = dict_centers["action_zone%s" % i]
-            axs = fig.add_subplot(rows, cols, position[i])
-            for j in range(len(list_vehicle)):
-                w = list_vehicle[j]
-                x = 2 * w
-                y = 2 * w + 1
-                print(len(part_ant_exploit[:, x]))
-                print(len(part_ant_exploit[:, y]))
-                self.plot_trajectory(axs, part_ant_exploit[:, x], part_ant_exploit[:, y], z=None, colormap='winter',
-                                     num_of_points=(len(part_ant_exploit[:, 0]) * 10))
-                #self.plot_trajectory(axs[0], part_ant[:, 2], part_ant[:, 3], z=None, colormap='Wistia',
-                 #                    num_of_points=(int((part_ant[:, 0].shape)[0]) * 10))
-                #self.plot_trajectory(axs[0], part_ant[:, 4], part_ant[:, 5], z=None, colormap='Purples',
-                 #                    num_of_points=(int((part_ant[:, 0].shape)[0]) * 10))
-                #self.plot_trajectory(axs[0], part_ant[:, 6], part_ant[:, 7], z=None, colormap='Reds',
+            dict_matrix_sigma["action_zone%s" % i], dict_matrix_mu["action_zone%s" % i] = self.Z_var_mean(dict_mu["action_zone%s" % i], dict_sigma["action_zone%s" % i])
+
+        for j in range(len(assig_center)):
+            x = 2 * j
+            y = 2 * j + 1
+            zone = int(assig_center[j])
+            matrix_sigma = copy.copy(dict_matrix_sigma["action_zone%s" % zone])
+            initial_x = part_ant_exploit[0, x]
+            final_x = part_ant_exploit[-1, x]
+            initial_y = part_ant_exploit[0, y]
+            final_y = part_ant_exploit[-1, y]
+            axs = fig.add_subplot(rows, cols, position[j])
+            self.plot_trajectory_classic(axs, part_ant_exploit[:, x], part_ant_exploit[:, y], colormap=colors[j])
+            #self.plot_trajectory(axs[0], part_ant[:, 2], part_ant[:, 3], z=None, colormap='Wistia',
+             #                    num_of_points=(int((part_ant[:, 0].shape)[0]) * 10))
+            #self.plot_trajectory(axs[0], part_ant[:, 4], part_ant[:, 5], z=None, colormap='Purples',
+             #                    num_of_points=(int((part_ant[:, 0].shape)[0]) * 10))
+            #self.plot_trajectory(axs[0], part_ant[:, 6], part_ant[:, 7], z=None, colormap='Reds',
+            axs.plot(initial_x, initial_y, 'x', color='black', markersize=4, label='Exploitation initial position')
+            axs.plot(final_x, final_y, 'X', color='red', markersize=3, label='Exploitation final position')
+            axs.legend(loc=3, fontsize=6)
             im = axs.imshow(matrix_sigma.T, interpolation='bilinear', origin='lower', cmap="gist_yarg", vmin=0, vmax=1.0)
             #cbar = plt.colorbar(im, ax=axs, label='µ', shrink=1.0, ticks=v)
             axs.set_xlabel("x [m]")
             axs.set_ylabel("y [m]")
-            axs.set_title("Action zone %s" % str(i + 1))
+            axs.set_title("Vehicle %s" % str(j + 1))
             axs.set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
             axs.set_xticks([0, 50, 100])
             axs.set_aspect('equal')
@@ -272,9 +277,9 @@ class Plots():
                 initial_y.append(part_ant[0, i])
                 final_y.append(part_ant[-1, i])
         self.plot_trajectory_classic(axs[0], part_ant[:, 0], part_ant[:, 1], colormap='winter')
-        self.plot_trajectory_classic(axs[0], part_ant[:, 2], part_ant[:, 3], colormap='Wistia')
-        self.plot_trajectory_classic(axs[0], part_ant[:, 4], part_ant[:, 5], colormap='Purples')
-        self.plot_trajectory_classic(axs[0], part_ant[:, 6], part_ant[:, 7], colormap='Reds')
+        self.plot_trajectory_classic(axs[0], part_ant[:, 2], part_ant[:, 3], colormap='copper')
+        self.plot_trajectory_classic(axs[0], part_ant[:, 4], part_ant[:, 5], colormap=self.cmap2)
+        self.plot_trajectory_classic(axs[0], part_ant[:, 6], part_ant[:, 7], colormap='spring')
         axs[0].plot(initial_x, initial_y, 'o', color='black', markersize=3, label='ASVs initial positions')
         axs[0].plot(final_x, final_y, 'X', color='red', markersize=3, label='ASVs final positions')
         axs[0].legend(loc=3, fontsize=6)
@@ -292,7 +297,7 @@ class Plots():
         # p4y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 7]))
         # axs[0].plot(p4x, p4y, 'k')
 
-        im2 = axs[0].imshow(Z_var.T, interpolation='bilinear', origin='lower', cmap="gist_yarg")
+        im2 = axs[0].imshow(Z_var.T, interpolation='bilinear', origin='lower', cmap="gist_yarg", vmin=0, vmax=1.0)
         plt.colorbar(im2, ax=axs[0], label='σ', shrink=1.0)
         # axs[0].set_xlabel("x [m]")
         axs[0].set_ylabel("y [m]")
@@ -308,7 +313,76 @@ class Plots():
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         axs[0].yaxis.set_major_formatter(ticks_y)
 
-        im3 = axs[1].imshow(Z_mean.T, interpolation='bilinear', origin='lower', cmap="jet")
+        im3 = axs[1].imshow(Z_mean.T, interpolation='bilinear', origin='lower', cmap="jet", vmin=0, vmax=1.0)
+        plt.colorbar(im3, ax=axs[1], label='µ', shrink=1.0)
+        axs[1].set_xlabel("x [m]")
+        axs[1].set_ylabel("y [m]")
+        axs[1].set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
+        axs[1].set_xticks([0, 50, 100])
+        axs[1].set_ylim([self.ys, 0])
+        axs[1].set_aspect('equal')
+        axs[1].grid(True)
+        ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        axs[1].xaxis.set_major_formatter(ticks_x)
+
+        ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        axs[1].yaxis.set_major_formatter(ticks_y)
+
+        plt.savefig("../Image/Contamination/GT3/Tabla_3.png")
+        plt.show()
+
+    def movement_exploration(self, mu, sigma, part_ant):
+        Z_var, Z_mean = self.Z_var_mean(mu, sigma)
+        fig, axs = plt.subplots(2, 1, figsize=(5, 10))
+        initial_x = list()
+        initial_y = list()
+        final_x = list()
+        final_y = list()
+        for i in range(part_ant.shape[1]):
+            if i % 2 == 0:
+                initial_x.append(part_ant[0, i])
+                final_x.append(part_ant[-1, i])
+            else:
+                initial_y.append(part_ant[0, i])
+                final_y.append(part_ant[-1, i])
+        self.plot_trajectory_classic(axs[0], part_ant[:, 0], part_ant[:, 1], colormap='winter')
+        self.plot_trajectory_classic(axs[0], part_ant[:, 2], part_ant[:, 3], colormap='copper')
+        self.plot_trajectory_classic(axs[0], part_ant[:, 4], part_ant[:, 5], colormap=self.cmap2)
+        self.plot_trajectory_classic(axs[0], part_ant[:, 6], part_ant[:, 7], colormap='spring')
+        axs[0].plot(initial_x, initial_y, 'o', color='black', markersize=3, label='ASVs initial positions')
+        axs[0].plot(final_x, final_y, 'x', color='red', markersize=4, label='ASVs exploration final positions')
+        axs[0].legend(loc=3, fontsize=6)
+        # im1 = axs[0].scatter(x_ga, y_ga, c=n, cmap="gist_rainbow", marker='.')
+        # p1x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 0]))
+        # p1y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 1]))
+        # axs[0].plot(p1x, p1y, 'r')
+        # p2x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 2]))
+        # p2y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 3]))
+        # axs[0].plot(p2x, p2y, 'w')
+        # p3x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 4]))
+        # p3y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 5]))
+        # axs[0].plot(p3x, p3y, 'c')
+        # p4x = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 6]))
+        # p4y = list(map(lambda x: x + abs(self.grid_min), part_ant[:, 7]))
+        # axs[0].plot(p4x, p4y, 'k')
+
+        im2 = axs[0].imshow(Z_var.T, interpolation='bilinear', origin='lower', cmap="gist_yarg", vmin=0, vmax=1.0)
+        plt.colorbar(im2, ax=axs[0], label='σ', shrink=1.0)
+        # axs[0].set_xlabel("x [m]")
+        axs[0].set_ylabel("y [m]")
+        axs[0].set_yticks([0, 20, 40, 60, 80, 100, 120, 140])
+        axs[0].set_xticks([0, 50, 100])
+        axs[0].set_aspect('equal')
+        axs[0].set_ylim([self.ys, 0])
+        axs[0].grid(True)
+        # ticks_x = ticker.FuncFormatter()
+        ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        axs[0].xaxis.set_major_formatter(ticks_x)
+
+        ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        axs[0].yaxis.set_major_formatter(ticks_y)
+
+        im3 = axs[1].imshow(Z_mean.T, interpolation='bilinear', origin='lower', cmap="jet", vmin=0, vmax=1.0)
         plt.colorbar(im3, ax=axs[1], label='µ', shrink=1.0)
         axs[1].set_xlabel("x [m]")
         axs[1].set_ylabel("y [m]")
