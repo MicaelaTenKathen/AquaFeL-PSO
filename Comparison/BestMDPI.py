@@ -63,7 +63,7 @@ start_time = time.time()
 method = 0
 pso = PSOEnvironment(resolution, ys, method, initial_seed=1000001, initial_position=initial_position, vehicles=4,
                      exploration_distance=100, exploitation_distance=200, reward_function='inc_mse',
-                     type_error='contamination')
+                     type_error='contamination', final_model='action_zone')
 
 # Gaussian process initialization
 
@@ -93,7 +93,7 @@ for i in range(1):
         mean_error.append(np.mean(error_actual))
         n = error_data.shape[0] - 1
     X_test, secure, bench_function, grid_min, sigma, mu, MSE_data, it, part_ant, y_data, grid, bench_max, dict_mu, \
-    dict_sigma, centers, part_ant_exploit, dict_centers, assig_center, part_ant_explore = pso.data_out()
+    dict_sigma, centers, part_ant_exploit, dict_centers, assig_center, part_ant_explore, final_mu, final_sigma = pso.data_out()
     plot = Plots(xs, ys, X_test, secure, bench_function, grid_min, grid)
     #plot.gaussian(mu, sigma, part_ant)
     plot.movement_exploration(mu, sigma, part_ant_explore)
@@ -102,6 +102,8 @@ for i in range(1):
     plot.mu_exploitation(dict_mu, dict_sigma, centers)
     distances = pso.distances_data()
     plot.movement_exploitation(4, dict_mu, dict_sigma, centers, dict_centers, part_ant_exploit, assig_center)
+    plot.plot_classic(final_mu, final_sigma, part_ant)
+
     # if i == 0:
     #   MSE_array = pd.DataFrame(mean_MSE)
     # else:

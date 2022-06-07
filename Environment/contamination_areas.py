@@ -10,6 +10,7 @@ class DetectContaminationAreas():
         self.radio = area / vehicles
         self.benchmark = copy.copy(benchmark)
         self.ava = np.array(X_test)
+        self.vehicles = vehicles
 
     def real_peaks(self):
         array_max_x = list()
@@ -62,13 +63,14 @@ class DetectContaminationAreas():
         array_max_x_bench = list()
         array_max_y_bench = list()
         max_bench_list = list()
+        cen = 0
 
         for i in range(len(mean)):
             if mean[i] >= 0.33:
                 array_action_zones.append(mean[i])
                 coordinate_action_zones.append(self.coord[i])
                 bench_az.append(self.benchmark[i])
-        while True:
+        while cen < self.vehicles:
             max_action_zone = max(array_action_zones)
             max_index = array_action_zones.index(max_action_zone)
             max_coordinate = coordinate_action_zones[max_index]
@@ -96,6 +98,7 @@ class DetectContaminationAreas():
                     m += 1
             if len(array_action_zones) == 0:
                 break
+            cen += 1
         center_peaks = np.column_stack((array_max_x, array_max_y))
         center_peaks_bench = np.column_stack((array_max_x_bench, array_max_y_bench))
         for w in range(len(array_max_x)):

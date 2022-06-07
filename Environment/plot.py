@@ -463,7 +463,7 @@ class Plots():
 
         fig, ax = plt.subplots()
 
-        im3 = ax.imshow(Z_mean.T, interpolation='none', origin='lower', cmap=self.cmap)
+        im3 = ax.imshow(Z_mean.T, interpolation='none', origin='lower', cmap=self.cmap, vmin=0, vmax=100)
         plt.colorbar(im3, ax=ax, label='Contamination [%]', shrink=1.0)
         ax.set_xlabel("x [m]")
         ax.set_ylabel("y [m]")

@@ -45,8 +45,9 @@ class PSOEnvironment(gym.Env):
 
     def __init__(self, resolution, ys, method, initial_seed, initial_position, vehicles=4, exploration_distance=100,
                  exploitation_distance=200, reward_function='mse', behavioral_method=0, type_error='all_map',
-                 stage="exploration"):
+                 stage='exploration', final_model='samples'):
         self.type_error = type_error
+        self.final_model = final_model
         self.exploration_distance = exploration_distance
         self.exploitation_distance = exploitation_distance
         self.stage = stage
@@ -116,6 +117,8 @@ class PSOEnvironment(gym.Env):
         self.seed = initial_seed
         self.mu = []
         self.sigma = []
+        self.final_mu = []
+        self.final_sigma = []
         self.g = 0
         self.g_exploit = 0
         self.post_array = np.array([1, 1, 1, 1])
@@ -299,6 +302,7 @@ class PSOEnvironment(gym.Env):
         self.x_h = []
         self.y_h = []
         self.stage = "exploration"
+        self.type_error = 'contamination'
         self.coord_centers = []
         self.max_centers_bench = []
         self.x_p = []
@@ -307,6 +311,8 @@ class PSOEnvironment(gym.Env):
         self.max_bench = list()
         self.action_zone_index = list()
         self.fitness = []
+        self.final_mu = []
+        self.final_sigma = []
         self.y_data = []
         self.dict_ = {}
         self.dict_error_peak_explore = {}
@@ -669,7 +675,7 @@ class PSOEnvironment(gym.Env):
 
     def calculate_error(self, dfirts=False):
         if self.type_error == 'all_map':
-            self.error = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
+            self.error = mean_squared_error(y_true=self.bench_array, y_pred=self.final_mu)
         elif self.type_error == 'peaks':
             if dfirts:
                 for i in range(len(self.dict_centers)):
@@ -1055,7 +1061,56 @@ class PSOEnvironment(gym.Env):
         elif self.stage == "exploitation":
             action = np.array([3.6845, 1.5614, 0, 3.1262])
             self.state, reward, done, dic = self.step_stage_exploitation(action)
+        if done:
+            if self.final_model == 'samples':
+                self.final_gaussian()
+            elif self.final_model == 'action_zone':
+                self.replace_action_zones()
+            self.type_error = 'all_map'
+            self.calculate_error()
+            print("MSE all_map final: ", self.error)
         return self.state, reward, done, {}
+
+    def final_gaussian(self):
+        final_sample_x = copy.copy(self.x_h)
+        final_sample_y = copy.copy(self.y_h)
+        final_fitness = copy.copy(self.fitness)
+        for i in range(len(self.dict_mu)):
+            x = copy.copy(self.dict_sample_x["action_zone%s" % i])
+            y = copy.copy(self.dict_sample_y["action_zone%s" % i])
+            fitness = copy.copy(self.dict_fitness["action_zone%s" % i])
+            for j in range(len(final_sample_x)):
+                for k in range(len(x)):
+                    if final_sample_x[j] == x[k] and final_sample_y[j] == y[k]:
+                        final_fitness[j] = fitness[k]
+                        del x[k]
+                        del y[k]
+                        del fitness[k]
+                        break
+            final_sample_x = [*final_sample_x, *x]
+            final_sample_y = [*final_sample_y, *y]
+            final_fitness = [*final_fitness, *fitness]
+
+        x_a = np.array(final_sample_x).reshape(-1, 1)
+        y_a = np.array(final_sample_y).reshape(-1, 1)
+        x_train = np.concatenate([x_a, y_a], axis=1).reshape(-1, 2)
+        y_train = np.array(final_fitness).reshape(-1, 1)
+
+        self.gpr.fit(x_train, y_train)
+        self.gpr.get_params()
+
+        self.final_mu, self.final_sigma = self.gpr.predict(self.X_test, return_std=True)
+
+    def replace_action_zones(self):
+        self.final_mu = copy.copy(self.mu)
+        self.final_sigma = copy.copy(self.sigma)
+        for i in range(len(self.dict_index)):
+            action_zone_index = copy.copy(self.dict_index["action_zone%s" % i])
+            action_zone_mu = copy.copy(self.dict_mu["action_zone%s" % i])
+            action_zone_sigma = copy.copy(self.dict_sigma["action_zone%s" % i])
+            for j in range(len(action_zone_index)):
+                self.final_mu[action_zone_index[j]] = action_zone_mu[action_zone_index[j]]
+                self.final_sigma[action_zone_index[j]] = action_zone_sigma[action_zone_index[j]]
 
     def data_out(self):
 
@@ -1066,7 +1121,7 @@ class PSOEnvironment(gym.Env):
         return self.X_test, self.secure, self.bench_function, self.grid_min, self.sigma, \
                self.mu, self.error_data, self.it, self.part_ant, self.bench_array, self.grid_or, self.bench_max, \
                self.dict_mu, self.dict_sigma, self.centers, self.part_ant_exploit, self.dict_centers, self.assig_centers, \
-               self.part_ant_explore
+               self.part_ant_explore, self.final_mu, self.final_sigma
 
     def error_value(self):
         return self.error_data
