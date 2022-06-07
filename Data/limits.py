@@ -46,6 +46,7 @@ class Limits:
     def new_limit(self, g, part, s_n, n_data, s_ant, part_ant):
         with open('../GroundTruth/bounds.npy'.format(self.file), 'rb') as bn:
             df_bounds = np.load(bn)
+        n_dat = n_data + 1
         x_int = int(part[0])
         y_int = int(part[1])
         s_1 = s_n[0]
@@ -80,48 +81,57 @@ class Limits:
                             bn.append(df_bounds[i, :])
             bn = np.array(bn)
             limit = Limits(self.secure, self.xs, self.ys)
-            if n_data == 1.0:
-                if s_ant[0] > 1 and s_1:
-                    part = limit.ratio_s(part_ant[g, 0], part_ant[g, 1], part)
-                    s_1 = False
+            if s_ant[n_data] > 1 and s_n[n_data]:
+                part = limit.ratio_s(part_ant[g, 2 * n_data], part_ant[g, 2 * n_data + 1], part)
+                s_n[n_data] = False
+            else:
+                if part[0] <= bn[0, 0]:
+                    part[0] = bn[0, 0] + 2
                 else:
-                    if part[0] <= bn[0, 0]:
-                        part[0] = bn[0, 0] + 2
-                    else:
-                        part[0] = bn[0, 1] - 2
-                s_ant[0] = s
-            elif n_data == 2.0:
-                if s_ant[1] > 1 and s_2:
-                    part = limit.ratio_s(part_ant[g, 2], part_ant[g, 3], part)
-                    s_2 = False
-                else:
-                    if part[0] <= bn[0, 0]:
-                        part[0] = bn[0, 0] + 2
-                    else:
-                        part[0] = bn[0, 1] - 2
-                s_ant[1] = s
-            elif n_data == 3.0:
-                if s_ant[2] > 1 and s_3:
-                    part = limit.ratio_s(part_ant[g, 4], part_ant[g, 5], part)
-                    s_3 = False
-                else:
-                    if part[0] <= bn[0, 0]:
-                        part[0] = bn[0, 0] + 2
-                    else:
-                        part[0] = bn[0, 1] - 2
-                s_ant[2] = s
-            elif n_data == 4.0:
-                if s_ant[3] > 1 and s_4:
-                    part = limit.ratio_s(part_ant[g, 6], part_ant[g, 7], part)
-                    s_4 = False
+                    part[0] = bn[0, 1] - 2
+            s_ant[n_data] = s
+            #if n_dat == 1.0:
+             #   if s_ant[0] > 1 and s_1:
+              #      part = limit.ratio_s(part_ant[g, 0], part_ant[g, 1], part)
+               #     s_1 = False
+                #else:
+                 #   if part[0] <= bn[0, 0]:
+                  #      part[0] = bn[0, 0] + 2
+                   # else:
+                    #    part[0] = bn[0, 1] - 2
+                #s_ant[0] = s
+            #elif n_dat == 2.0:
+             #   if s_ant[1] > 1 and s_2:
+              #      part = limit.ratio_s(part_ant[g, 2], part_ant[g, 3], part)
+               #     s_2 = False
+                #else:
+                 #   if part[0] <= bn[0, 0]:
+                  #      part[0] = bn[0, 0] + 2
+                   # else:
+                    #    part[0] = bn[0, 1] - 2
+                #s_ant[1] = s
+            #elif n_dat == 3.0:
+             #   if s_ant[2] > 1 and s_3:
+              #      part = limit.ratio_s(part_ant[g, 4], part_ant[g, 5], part)
+               #     s_3 = False
+                #else:
+                 #   if part[0] <= bn[0, 0]:
+                  #      part[0] = bn[0, 0] + 2
+                   # else:
+                    #    part[0] = bn[0, 1] - 2
+                #s_ant[2] = s
+            #elif n_dat == 4.0:
+             #   if s_ant[3] > 1 and s_4:
+              #      part = limit.ratio_s(part_ant[g, 6], part_ant[g, 7], part)
+               #     s_4 = False
 
-                else:
-                    if part[0] <= bn[0, 0]:
-                        part[0] = bn[0, 0] + 2
-                    else:
-                        part[0] = bn[0, 1] - 2
-                s_ant[3] = s
-        s_n = [s_1, s_2, s_3, s_4]
+                #else:
+                 #   if part[0] <= bn[0, 0]:
+                  #      part[0] = bn[0, 0] + 2
+                   # else:
+                    #    part[0] = bn[0, 1] - 2
+                #s_ant[3] = s
+        #s_n = [s_1, s_2, s_3, s_4]
         return part, s_n
 
 

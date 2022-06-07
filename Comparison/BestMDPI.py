@@ -55,13 +55,19 @@ initial_position = np.array([[0, 0],
                              [8, 56],
                              [37, 16],
                              [78, 81],
-                             [74, 124]])
+                             [74, 124],
+                             [20, 40],
+                             [32, 92],
+                             [64, 60],
+                             [52, 10],
+                             [91, 113],
+                             [49, 51]])
 start_time = time.time()
 
 # PSO initialization
-
+vehicles = 4
 method = 0
-pso = PSOEnvironment(resolution, ys, method, initial_seed=1000001, initial_position=initial_position, vehicles=4,
+pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position, vehicles=vehicles,
                      exploration_distance=100, exploitation_distance=200, reward_function='inc_mse',
                      type_error='contamination', final_model='action_zone')
 
@@ -101,7 +107,7 @@ for i in range(1):
     plot.detection_areas(mu, sigma)
     plot.mu_exploitation(dict_mu, dict_sigma, centers)
     distances = pso.distances_data()
-    plot.movement_exploitation(4, dict_mu, dict_sigma, centers, dict_centers, part_ant_exploit, assig_center)
+    plot.movement_exploitation(vehicles, dict_mu, dict_sigma, centers, dict_centers, part_ant_exploit, assig_center)
     plot.plot_classic(final_mu, final_sigma, part_ant)
 
     # if i == 0:

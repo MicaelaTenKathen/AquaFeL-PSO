@@ -78,7 +78,7 @@ class PSOEnvironment(gym.Env):
         self.centers = 0
         self.vehicles = vehicles
         self.assig_centers = np.zeros((self.vehicles, 1))
-        self.population = 4
+        self.population = vehicles
         self.resolution = resolution
         self.smin = 0
         self.smax = 3
@@ -101,15 +101,15 @@ class PSOEnvironment(gym.Env):
         self.x_bench = None
         self.y_bench = None
         self.n_plot = float(1)
-        self.s_n = np.array([True, True, True, True])
-        self.s_ant = np.zeros(4)
+        self.s_n = np.full(self.vehicles, True)
+        self.s_ant = np.zeros(self.vehicles)
         self.samples = None
         self.dist_ant = None
         self.sigma_best = []
         self.mu_best = []
         self.action_zone = list()
         self.action_zone_index = list()
-        self.n_data = 1
+        self.n_data = 0
         self.num = 0
         self.save = 0
         self.num_of_peaks = 0
@@ -121,12 +121,12 @@ class PSOEnvironment(gym.Env):
         self.final_sigma = []
         self.g = 0
         self.g_exploit = 0
-        self.post_array = np.array([1, 1, 1, 1])
-        self.distances = np.zeros(4)
-        self.distances_exploit = np.zeros(4)
+        self.post_array = np.ones((1, self.vehicles))
+        self.distances = np.zeros(self.vehicles)
+        self.distances_exploit = np.zeros(self.vehicles)
         self.lam = 0.375
-        self.part_ant = np.zeros((1, 8))
-        self.part_ant_exploit = np.zeros((1, 8))
+        self.part_ant = np.zeros((1, self.vehicles * 2))
+        self.part_ant_exploit = copy.copy(self.part_ant)
         self.part_ant_explore = copy.copy(self.part_ant)
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
         self.error_data = []
@@ -151,12 +151,12 @@ class PSOEnvironment(gym.Env):
         self.bench_array = []
         self.error_distance = []
         self.duplicate = False
-        self.array_part = np.zeros((1, 8))
+        self.array_part = np.zeros((1, self.vehicles * 2))
         self.reward_function = reward_function
         self.behavioral_method = behavioral_method
         self.initial_position = initial_position
         if self.method == 0:
-            self.state = np.zeros(22, )
+            self.state = np.zeros(self.vehicles * 8, )
         else:
             self.state = np.zeros((6, self.xs, self.ys))
 
@@ -180,7 +180,7 @@ class PSOEnvironment(gym.Env):
         # self.action_space = gym.spaces.Box(low=0.0, high=4.0, shape=(4,))
         # self.state_space = gym.spaces.Box()
 
-        self.util = Utils()
+        self.util = Utils(self.vehicles)
 
         createPart()
 
@@ -279,7 +279,7 @@ class PSOEnvironment(gym.Env):
                                                                                                     self.resolution,
                                                                                                     self.xs, self.ys,
                                                                                                     self.X_test,
-                                                                                                    self.seed).create_new_map()
+                                                                                                    self.seed, self.vehicles).create_new_map()
 
         self.max_contamination()
         self.generatePart()
@@ -337,25 +337,25 @@ class PSOEnvironment(gym.Env):
         self.x_bench = None
         self.y_bench = None
         self.n_plot = float(1)
-        self.s_n = np.array([True, True, True, True])
-        self.s_ant = np.zeros(4)
+        self.s_n = np.full(self.vehicles, True)
+        self.s_ant = np.zeros(self.vehicles)
         self.samples = None
         self.dist_ant = None
         self.sigma_best = []
         self.mu_best = []
         self.coordinate_bench_max = []
-        self.n_data = 1
+        self.n_data = 0
         self.mu = []
         self.max_peaks_bench = list()
         self.max_peaks_mu = list()
         self.p = 0
         self.sigma = []
-        self.post_array = np.array([1, 1, 1, 1])
-        self.distances = np.zeros(4)
-        self.part_ant = np.zeros((1, 8))
-        self.distances_exploit = np.zeros(4)
+        self.post_array = np.ones(self.vehicles)
+        self.distances = np.zeros(self.vehicles)
+        self.part_ant = np.zeros((1, self.vehicles * 2))
+        self.distances_exploit = copy.copy(self.distances)
         self.part_ant_explore = copy.copy(self.part_ant)
-        self.part_ant_exploit = np.zeros((1, 8))
+        self.part_ant_exploit = copy.copy(self.part_ant)
         self.last_sample, self.k, self.f, self.samples, self.ok = 0, 0, 0, 0, False
         self.error_data = []
         self.save = 0
@@ -366,18 +366,17 @@ class PSOEnvironment(gym.Env):
         self.it = []
         self.error = []
         self.duplicate = False
-        self.array_part = np.zeros((1, 8))
+        self.array_part = np.zeros((1, self.vehicles * 2))
         self.seed += 1
 
         if self.method == 0:
-            self.state = np.zeros(22, )
+            self.state = np.zeros(self.vehicles * 8, )
         else:
             self.state = np.zeros((6, self.xs, self.ys))
 
         self.num += 1
         self.g = 0
         self.g_exploit = 0
-        self.distances = np.zeros(4)
 
     def max_contamination(self):
         self.bench_max, self.coordinate_bench_max = self.obtain_max(self.bench_array)
@@ -428,7 +427,7 @@ class PSOEnvironment(gym.Env):
 
         self.mu, self.sigma = self.gpr.predict(self.X_test, return_std=True)
         post_ls = np.min(np.exp(self.gpr.kernel_.theta[0]))
-        r = self.n_data - 1
+        r = self.n_data
         self.post_array[r] = post_ls
 
         return self.post_array
@@ -543,7 +542,7 @@ class PSOEnvironment(gym.Env):
 
         mu, sigma = self.gpr.predict(self.X_test, return_std=True)
         post_ls = np.min(np.exp(self.gpr.kernel_.theta[0]))
-        r = self.n_data - 1
+        r = self.n_data
         self.post_array[r] = post_ls
 
         mu_available = list()
@@ -598,7 +597,7 @@ class PSOEnvironment(gym.Env):
 
             part.fitness.values = self.new_fitness(part)
 
-            if self.n_plot > 4:
+            if self.n_plot > self.vehicles:
                 self.n_plot = float(1)
 
             part.best = creator.Particle(part)
@@ -618,8 +617,8 @@ class PSOEnvironment(gym.Env):
             self.samples += 1
 
             self.n_data += 1
-            if self.n_data > 4:
-                self.n_data = 1
+            if self.n_data > self.vehicles - 1:
+                self.n_data = 0
 
         # self.MSE_data1, self.it = self.util.mse(self.g, self.bench_array, self.mu)
         self.error = self.calculate_error()
@@ -630,7 +629,7 @@ class PSOEnvironment(gym.Env):
 
         self.return_state()
 
-        self.k = 4
+        self.k = self.vehicles
         self.ok = False
 
         return self.state
@@ -811,7 +810,7 @@ class PSOEnvironment(gym.Env):
         dis_steps = 0
         dist_ant = np.mean(self.distances)
         self.dist_pre = np.max(self.distances)
-        self.n_data = 1
+        self.n_data = 0
         self.f += 1
 
         while dis_steps < 10:
@@ -827,8 +826,8 @@ class PSOEnvironment(gym.Env):
                                                                         self.distances, self.array_part, dfirst=False)
 
                 self.n_data += 1
-                if self.n_data > 4:
-                    self.n_data = 1
+                if self.n_data > self.vehicles - 1:
+                    self.n_data = 0
 
             if (np.mean(self.distances) - self.last_sample) >= (np.min(self.post_array) * self.lam):
                 self.k += 1
@@ -843,8 +842,8 @@ class PSOEnvironment(gym.Env):
                     self.samples += 1
 
                     self.n_data += 1
-                    if self.n_data > 4:
-                        self.n_data = 1
+                    if self.n_data > self.vehicles - 1:
+                        self.n_data = 0
 
                 self.error = self.calculate_error()
                 self.error_data.append(self.error)
@@ -881,8 +880,8 @@ class PSOEnvironment(gym.Env):
                                                                                         self.distances_exploit, self.array_part,
                                                                                         dfirst=True)
                 self.n_data += 1
-                if self.n_data > 4:
-                    self.n_data = 1
+                if self.n_data > self.vehicles - 1:
+                    self.n_data = 0
             #self.type_error = 'action_zone'
             #self.error = self.calculate_error(dfirts=True)
             #self.error_data.append(self.error)
@@ -942,7 +941,7 @@ class PSOEnvironment(gym.Env):
         dis_steps = 0
         dist_ant = np.mean(self.distances)
         self.dist_pre = np.max(self.distances)
-        self.n_data = 1
+        self.n_data = 0
         self.f += 1
 
         while dis_steps < 10:
@@ -973,8 +972,8 @@ class PSOEnvironment(gym.Env):
                                                                                         dfirst=False)
 
                 self.n_data += 1
-                if self.n_data > 4:
-                    self.n_data = 1
+                if self.n_data > self.vehicles - 1:
+                    self.n_data = 0
 
             if (np.mean(self.distances) - self.last_sample) >= (np.min(self.post_array) * self.lam):
                 self.k += 1
@@ -987,8 +986,8 @@ class PSOEnvironment(gym.Env):
                         self.take_sample(part, i)
 
                         self.n_data += 1
-                        if self.n_data > 4:
-                            self.n_data = 1
+                        if self.n_data > self.vehicles - 1:
+                            self.n_data = 0
 
                         self.samples += 1
 
@@ -1034,7 +1033,7 @@ class PSOEnvironment(gym.Env):
                 z += 1
                 self.state[z + 6] = part.best[0]
                 self.state[z + 7] = part.best[1]
-                if self.n_data == 4:
+                if self.n_data == self.vehicles - 1:
                     self.state[16] = self.best[0]
                     self.state[17] = self.best[1]
                     self.state[18] = self.sigma_best[0]
@@ -1046,11 +1045,11 @@ class PSOEnvironment(gym.Env):
                 posy = (2 * z) + 1
                 self.state = self.plot.part_position(self.part_ant[:, posx], self.part_ant[:, posy], self.state, z)
                 z += 1
-                if self.n_data == 4:
+                if self.n_data == self.vehicles - 1:
                     self.state = self.plot.state_sigma_mu(self.mu, self.sigma, self.state)
             self.n_data += 1
-            if self.n_data > 4:
-                self.n_data = 1
+            if self.n_data > self.vehicles - 1:
+                self.n_data = 0
 
     def step(self, action):
         if self.stage == "exploration":

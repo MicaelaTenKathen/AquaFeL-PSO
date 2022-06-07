@@ -24,6 +24,12 @@ class Plots():
         self.cmap1 = LinearSegmentedColormap.from_list('name', ['royalblue', 'coral', 'purple'])
         self.cmap = LinearSegmentedColormap.from_list('name', ['green', 'yellow', 'red'])
         self.cmap2 = LinearSegmentedColormap.from_list('name', ['red', 'purple'])
+        self.cmap3 = LinearSegmentedColormap.from_list('name', ['olive', 'cadetblue'])
+        self.cmap4 = LinearSegmentedColormap.from_list('name', ['grey', 'navy'])
+        self.cmap5 = LinearSegmentedColormap.from_list('name', ['darkviolet', 'crimson'])
+        self.cmap6 = LinearSegmentedColormap.from_list('name', ['lime', 'gold'])
+        self.colors = ['winter', 'copper', self.cmap2, 'spring', 'cool', self.cmap3, 'autumn', self.cmap4, self.cmap5,
+                       self.cmap6]
 
     def Z_var_mean(self, mu, sigma):
         Z_un = np.zeros([self.grid.shape[0], self.grid.shape[1]])
@@ -212,7 +218,6 @@ class Plots():
         fig = plt.figure(figsize=(8, 8))
         bottom, top = 0.1, 1.5
         left, right = 0.1, 2
-        colors = ['winter', 'copper', self.cmap2, 'spring']
 
         for i in range(len(dict_centers)):
             dict_matrix_sigma["action_zone%s" % i], dict_matrix_mu["action_zone%s" % i] = self.Z_var_mean(dict_mu["action_zone%s" % i], dict_sigma["action_zone%s" % i])
@@ -227,7 +232,7 @@ class Plots():
             initial_y = part_ant_exploit[0, y]
             final_y = part_ant_exploit[-1, y]
             axs = fig.add_subplot(rows, cols, position[j])
-            self.plot_trajectory_classic(axs, part_ant_exploit[:, x], part_ant_exploit[:, y], colormap=colors[j])
+            self.plot_trajectory_classic(axs, part_ant_exploit[:, x], part_ant_exploit[:, y], colormap=self.colors[j])
             #self.plot_trajectory(axs[0], part_ant[:, 2], part_ant[:, 3], z=None, colormap='Wistia',
              #                    num_of_points=(int((part_ant[:, 0].shape)[0]) * 10))
             #self.plot_trajectory(axs[0], part_ant[:, 4], part_ant[:, 5], z=None, colormap='Purples',
@@ -276,10 +281,14 @@ class Plots():
             else:
                 initial_y.append(part_ant[0, i])
                 final_y.append(part_ant[-1, i])
-        self.plot_trajectory_classic(axs[0], part_ant[:, 0], part_ant[:, 1], colormap='winter')
-        self.plot_trajectory_classic(axs[0], part_ant[:, 2], part_ant[:, 3], colormap='copper')
-        self.plot_trajectory_classic(axs[0], part_ant[:, 4], part_ant[:, 5], colormap=self.cmap2)
-        self.plot_trajectory_classic(axs[0], part_ant[:, 6], part_ant[:, 7], colormap='spring')
+
+        vehicles = int(part_ant.shape[1] / 2)
+        #print(vehicles)
+        for i in range(vehicles):
+            self.plot_trajectory_classic(axs[0], part_ant[:, 2 * i], part_ant[:, 2 * i + 1], colormap=self.colors[i])
+        #self.plot_trajectory_classic(axs[0], part_ant[:, 2], part_ant[:, 3], colormap='copper')
+        #self.plot_trajectory_classic(axs[0], part_ant[:, 4], part_ant[:, 5], colormap=self.cmap2)
+        #self.plot_trajectory_classic(axs[0], part_ant[:, 6], part_ant[:, 7], colormap='spring')
         axs[0].plot(initial_x, initial_y, 'o', color='black', markersize=3, label='ASVs initial positions')
         axs[0].plot(final_x, final_y, 'X', color='red', markersize=3, label='ASVs final positions')
         axs[0].legend(loc=3, fontsize=6)

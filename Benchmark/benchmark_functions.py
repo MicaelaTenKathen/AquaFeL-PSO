@@ -16,9 +16,10 @@ import random
 
 
 class Benchmark_function():
-    def __init__(self, grid, resolution, xs, ys, X_test, initial_seed, w_ostacles=False, obstacles_on=False,
+    def __init__(self, grid, resolution, xs, ys, X_test, initial_seed, vehicles, w_ostacles=False, obstacles_on=False,
                  randomize_shekel=True):
         self.w_obstacles = w_ostacles
+        self.vehicles = vehicles
         self.grid = grid
         self.X_test = X_test
         self.resolution = resolution
@@ -73,7 +74,7 @@ class Benchmark_function():
               #  self.c.append(5)
             #self.a = np.array(self.a)
             #self.c = np.array(self.c).T
-            num_of_peaks = np.random.RandomState(self.seed).randint(low=2, high=4)
+            num_of_peaks = np.random.RandomState(self.seed).randint(low=2, high=self.vehicles)
             #num_of_peaks = 4
             #self.a1 = np.random.RandomState(self.seed).random(size=(num_of_peaks, 2))
             #self.a = np.array([[0.5, 0.5], [0.25, 0.25], [0.25, 0.75], [0.9, 0.1]]) * 100
@@ -93,6 +94,11 @@ class Benchmark_function():
                 #self.a.append(arr)
             random.seed(self.seed)
             zone = random.sample(range(4), num_of_peaks)
+            #zone = list()
+            #for i in range(num_of_peaks):
+             #   zone.append(random.randint(0, 3))
+            #print(zone)
+            #zone = [random.randrange(1, 4, 1) for i in range(num_of_peaks)]
             for i in range(len(zone)):
                 if zone[i] == 0:
                     id1 = index_a1[i] * len(self.yukyry) - 1
