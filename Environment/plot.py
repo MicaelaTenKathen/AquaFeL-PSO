@@ -6,6 +6,11 @@ from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 from Environment.map import Map
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.patches import Rectangle, ConnectionPatch
+from matplotlib.transforms import Bbox, TransformedBbox, \
+    blended_transform_factory
+from mpl_toolkits.axes_grid1.inset_locator import BboxPatch, BboxConnector,\
+    BboxConnectorPatch
 import copy
 
 
@@ -30,6 +35,7 @@ class Plots():
         self.cmap6 = LinearSegmentedColormap.from_list('name', ['lime', 'gold'])
         self.colors = ['winter', 'copper', self.cmap2, 'spring', 'cool', self.cmap3, 'autumn', self.cmap4, self.cmap5,
                        self.cmap6]
+        self.cmapmean = 'jet'
 
     def Z_var_mean(self, mu, sigma):
         Z_un = np.zeros([self.grid.shape[0], self.grid.shape[1]])
@@ -127,7 +133,7 @@ class Plots():
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         axs[0].yaxis.set_major_formatter(ticks_y)
 
-        im3 = axs[1].imshow(Z_mean.T, interpolation='bilinear', origin='lower', cmap="jet")
+        im3 = axs[1].imshow(Z_mean.T, interpolation='bilinear', origin='lower', cmap=self.cmapmean)
         #plt.colorbar(im3, ax=axs[1], label='µ', shrink=1.0)
         axs[1].set_xlabel("x [m]")
         axs[1].set_ylabel("y [m]")
@@ -150,7 +156,7 @@ class Plots():
         plot_bench[self.grid_or == 0] = np.nan
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
-        im4 = ax1.imshow(plot_bench.T, interpolation='bilinear', origin='lower', cmap="jet")
+        im4 = ax1.imshow(plot_bench.T, interpolation='bilinear', origin='lower', cmap=self.cmapmean)
         plt.colorbar(im4, label='µ', shrink=1)
         ax1.set_xlabel("x [m]")
         ax1.set_ylabel("y [m]")
@@ -180,7 +186,7 @@ class Plots():
             v = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
             axs = fig.add_subplot(rows, cols, position[k])
             matrix_sigma, matrix_mu = self.Z_var_mean(dict_mu["action_zone%s" % k], dict_sigma["action_zone%s" % k])
-            im = axs.imshow(matrix_mu.T, interpolation='bilinear', origin='lower', cmap="jet", vmin=0, vmax=1.0)
+            im = axs.imshow(matrix_mu.T, interpolation='bilinear', origin='lower', cmap=self.cmapmean, vmin=0, vmax=1.0)
             #cbar = plt.colorbar(im, ax=axs, label='µ', shrink=1.0, ticks=v)
             axs.set_xlabel("x [m]")
             axs.set_ylabel("y [m]")
@@ -322,7 +328,7 @@ class Plots():
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         axs[0].yaxis.set_major_formatter(ticks_y)
 
-        im3 = axs[1].imshow(Z_mean.T, interpolation='bilinear', origin='lower', cmap="jet", vmin=0, vmax=1.0)
+        im3 = axs[1].imshow(Z_mean.T, interpolation='bilinear', origin='lower', cmap=self.cmapmean, vmin=0, vmax=1.0)
         plt.colorbar(im3, ax=axs[1], label='µ', shrink=1.0)
         axs[1].set_xlabel("x [m]")
         axs[1].set_ylabel("y [m]")
@@ -354,10 +360,10 @@ class Plots():
             else:
                 initial_y.append(part_ant[0, i])
                 final_y.append(part_ant[-1, i])
-        self.plot_trajectory_classic(axs[0], part_ant[:, 0], part_ant[:, 1], colormap='winter')
-        self.plot_trajectory_classic(axs[0], part_ant[:, 2], part_ant[:, 3], colormap='copper')
-        self.plot_trajectory_classic(axs[0], part_ant[:, 4], part_ant[:, 5], colormap=self.cmap2)
-        self.plot_trajectory_classic(axs[0], part_ant[:, 6], part_ant[:, 7], colormap='spring')
+        vehicles = int(part_ant.shape[1] / 2)
+        # print(vehicles)
+        for i in range(vehicles):
+            self.plot_trajectory_classic(axs[0], part_ant[:, 2 * i], part_ant[:, 2 * i + 1], colormap=self.colors[i])
         axs[0].plot(initial_x, initial_y, 'o', color='black', markersize=3, label='ASVs initial positions')
         axs[0].plot(final_x, final_y, 'x', color='red', markersize=4, label='ASVs exploration final positions')
         axs[0].legend(loc=3, fontsize=6)
@@ -391,7 +397,7 @@ class Plots():
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         axs[0].yaxis.set_major_formatter(ticks_y)
 
-        im3 = axs[1].imshow(Z_mean.T, interpolation='bilinear', origin='lower', cmap="jet", vmin=0, vmax=1.0)
+        im3 = axs[1].imshow(Z_mean.T, interpolation='bilinear', origin='lower', cmap=self.cmapmean, vmin=0, vmax=1.0)
         plt.colorbar(im3, ax=axs[1], label='µ', shrink=1.0)
         axs[1].set_xlabel("x [m]")
         axs[1].set_ylabel("y [m]")
@@ -514,4 +520,141 @@ class Plots():
         ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
         ax.yaxis.set_major_formatter(ticks_y)
         # plt.savefig("../Image/Contamination/GT3/Ground3.png")
+        plt.show()
+
+    def zoom_outside(self, srcax, roi, dstax, label, color="red", linewidth=2, roiKwargs={}, arrowKwargs={}):
+        '''Create a zoomed subplot outside the original subplot
+
+        srcax: matplotlib.axes
+            Source axis where locates the original chart
+        dstax: matplotlib.axes
+            Destination axis in which the zoomed chart will be plotted
+        roi: list
+            Region Of Interest is a rectangle defined by [xmin, ymin, xmax, ymax],
+            all coordinates are expressed in the coordinate system of data
+        roiKwargs: dict (optional)
+            Properties for matplotlib.patches.Rectangle given by keywords
+        arrowKwargs: dict (optional)
+            Properties used to draw a FancyArrowPatch arrow in annotation
+        '''
+        roiKwargs = dict([("fill", False), ("linestyle", "dashed"),
+                          ("color", color), ("label", label), ("linewidth", linewidth)]
+                         + list(roiKwargs.items()))
+        arrowKwargs = dict([("arrowstyle", "-"), ("color", color),
+                            ("linewidth", linewidth)]
+                           + list(arrowKwargs.items()))
+        # draw a rectangle on original chart
+        srcax.add_patch(Rectangle([roi[0], roi[1]], roi[2] - roi[0], roi[3] - roi[1],
+                                  **roiKwargs))
+        # get coordinates of corners
+        srcCorners = [[roi[0], roi[1]], [roi[0], roi[3]],
+                      [roi[2], roi[1]], [roi[2], roi[3]]]
+        dstCorners = dstax.get_position().corners()
+        srcBB = srcax.get_position()
+        dstBB = dstax.get_position()
+        # find corners to be linked
+        if srcBB.max[0] <= dstBB.min[0]:  # right side
+            if srcBB.min[1] < dstBB.min[1]:  # upper
+                corners = [1, 2]
+            elif srcBB.min[1] == dstBB.min[1]:  # middle
+                corners = [0, 1]
+            else:
+                corners = [0, 3]  # lower
+        elif srcBB.min[0] >= dstBB.max[0]:  # left side
+            if srcBB.min[1] < dstBB.min[1]:  # upper
+                corners = [0, 3]
+            elif srcBB.min[1] == dstBB.min[1]:  # middle
+                corners = [2, 3]
+            else:
+                corners = [1, 2]  # lower
+        elif srcBB.min[0] == dstBB.min[0]:  # top side or bottom side
+            if srcBB.min[1] < dstBB.min[1]:  # upper
+                corners = [0, 2]
+            else:
+                corners = [1, 3]  # lower
+        else:
+            RuntimeWarning("Cannot find a proper way to link the original chart to "
+                           "the zoomed chart! The lines between the region of "
+                           "interest and the zoomed chart wiil not be plotted.")
+            return
+        #con1 = ConnectionPatch(xyA=dstCorners[corners[0]], coordsA=dstax.transData,
+         #                      xyB=srcCorners[corners[0]], coordsB=srcax.transData, color='green')
+        # plot 2 lines to link the region of interest and the zoomed chart
+        for k in range(1):
+            srcax.annotate('', xy=srcCorners[corners[k]], xycoords="data",
+                           xytext=dstCorners[corners[k]], textcoords="figure fraction",
+                           arrowprops=arrowKwargs)
+
+    def zoom_action_zone(self, centers, dict_limits, mu, sigma, final_mu, final_sigma):
+        rows = centers
+        cols = 2
+        #cols += centers % rows
+        position = range(1, 2 * centers + 1)
+        colors = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8']
+
+        fig, ax = plt.subplots(figsize=(20, 6))
+
+        bottom, top = 0.1, 1.5
+        left, right = 0.1, 2.5
+        matrix_sigma, matrix_mu = self.Z_var_mean(mu, sigma)
+        im = ax.imshow(matrix_mu.T, interpolation='bilinear', origin='lower', cmap=self.cmapmean, vmin=0, vmax=1.0)
+        ax.set_xlabel("x [m]")
+        ax.set_ylabel("y [m]")
+        #ax.set_title("Action zone %s" % str(k + 1))
+        ax.set_aspect('equal')
+        ax.set_ylim([self.ys, 0])
+        ax.grid(True)
+        # ticks_x = ticker.FuncFormatter()
+        # print(ticks_x)
+        ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        # print(ticks_x2)
+        ax.xaxis.set_major_formatter(ticks_x)
+
+        ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        ax.yaxis.set_major_formatter(ticks_y)
+        h = 0
+        fig.subplots_adjust(top=0.85, bottom=bottom, left=left, right=right, hspace=0.6, wspace=0.40)
+        cbar_ax = fig.add_axes([0.85, bottom, 0.01, 0.85])
+        fig.colorbar(im, cax=cbar_ax, label='µ', shrink=1.0)
+        plt.tight_layout()
+
+        for k in range(centers):
+            for i in range(2):
+                if i == 0:
+                    matrix_sigma, matrix_mu = self.Z_var_mean(mu, sigma)
+
+                else:
+                    matrix_sigma, matrix_mu = self.Z_var_mean(final_mu, final_sigma)
+                # add every single subplot to the figure with a for loop
+                limits = dict_limits["action_zone%s" % k]
+                #sigma_az, mu_az = self.Z_var_mean(dict_mu["action_zone%s" % k], sigma)
+                ax1 = fig.add_subplot(rows, cols, position[h])
+                im = ax1.imshow(matrix_mu.T, interpolation='bilinear', origin='lower', cmap=self.cmapmean, vmin=0, vmax=1.0)
+                #ax1.set_xlabel("x [m]")
+                #ax1.set_ylabel("y [m]")
+                # ax.set_title("Action zone %s" % str(k + 1))
+                ax1.set_ylim(limits[1] - 1, limits[3] + 1)
+                ax1.set_xlim(limits[0] - 1, limits[2] + 1)
+                ax1.set_aspect('equal')
+                ax1.grid(True)
+                ax1.set_title("AZ%s" % str(k + 1), fontsize=10)
+                self.zoom_outside(ax, limits, ax1, "Action Zone%s" % str(k + 1), colors[k])
+                ax.text(limits[0] + 2, limits[1] - 2, "AZ%s" % str(k + 1))
+
+                # Create left side of Connection patch for first axes
+
+                # Add left side to the figure
+                # ticks_x = ticker.FuncFormatter()
+                # print(ticks_x)
+                ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+                # print(ticks_x2)
+                ax1.xaxis.set_major_formatter(ticks_x)
+
+                ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+                ax1.yaxis.set_major_formatter(ticks_y)
+                # cbar = plt.colorbar(im, ax=axs, label='µ', shrink=1.0, ticks=v)
+                h += 1
+
+
+
         plt.show()

@@ -99,7 +99,7 @@ for i in range(1):
         mean_error.append(np.mean(error_actual))
         n = error_data.shape[0] - 1
     X_test, secure, bench_function, grid_min, sigma, mu, MSE_data, it, part_ant, y_data, grid, bench_max, dict_mu, \
-    dict_sigma, centers, part_ant_exploit, dict_centers, assig_center, part_ant_explore, final_mu, final_sigma = pso.data_out()
+    dict_sigma, centers, part_ant_exploit, dict_centers, assig_center, part_ant_explore, final_mu, final_sigma, dict_limits = pso.data_out()
     plot = Plots(xs, ys, X_test, secure, bench_function, grid_min, grid)
     #plot.gaussian(mu, sigma, part_ant)
     plot.movement_exploration(mu, sigma, part_ant_explore)
@@ -109,6 +109,7 @@ for i in range(1):
     distances = pso.distances_data()
     plot.movement_exploitation(vehicles, dict_mu, dict_sigma, centers, dict_centers, part_ant_exploit, assig_center)
     plot.plot_classic(final_mu, final_sigma, part_ant)
+    plot.zoom_action_zone(centers, dict_limits, mu, sigma, final_mu, final_sigma)
 
     # if i == 0:
     #   MSE_array = pd.DataFrame(mean_MSE)

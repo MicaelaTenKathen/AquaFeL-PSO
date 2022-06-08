@@ -50,13 +50,14 @@ class DetectContaminationAreas():
         dict_impor_ = {}
         dict_index_ = {}
         dict_bench_ = {}
+        dict_limits = {}
         array_max_x = list()
         array_max_y = list()
         array_action_zones = list()
         coordinate_action_zones = list()
         mean = mu.flat
         j = 0
-        impo = 50
+        impo = 200
         action_zones = list()
         action_zones_index = list()
         bench_az = list()
@@ -109,7 +110,8 @@ class DetectContaminationAreas():
             coordinate_array = np.array(self.coord)
             for i in range(len(self.coord)):
                 if math.sqrt(
-                        (array_max_x[w] - coordinate_array[i, 0]) ** 2 + (array_max_y[w] - coordinate_array[i, 1]) ** 2) <= self.radio:
+                        (array_max_x[w] - coordinate_array[i, 0]) ** 2 + (
+                                array_max_y[w] - coordinate_array[i, 1]) ** 2) <= self.radio:
                     list_zone.append(mu[i])
                     list_coord.append(self.coord[i])
                     list_impo.append(impo)
@@ -120,6 +122,13 @@ class DetectContaminationAreas():
                 del self.coord[index_del]
                 m += 1
             array_list_coord = np.array(list_coord)
+            x_coord = array_list_coord[:, 0]
+            y_coord = array_list_coord[:, 1]
+            max_x_coord = max(x_coord)
+            min_x_coord = min(x_coord)
+            max_y_coord = max(y_coord)
+            min_y_coord = min(y_coord)
+            dict_limits["action_zone%s" % j] = [min_x_coord, max_y_coord, max_x_coord, min_y_coord]
             index = list()
             bench = list()
             for i in range(len(array_list_coord)):
@@ -139,5 +148,6 @@ class DetectContaminationAreas():
             dict_bench_["action_zone%s" % j] = bench
             impo -= 10
             j += 1
-
-        return dict_, dict_coord_, dict_impor_, j, center_peaks, dict_index_, dict_bench_, action_zones, center_peaks_bench, max_bench_list
+        print(dict_limits)
+        return dict_, dict_coord_, dict_impor_, j, center_peaks, dict_index_, dict_bench_, action_zones, \
+               center_peaks_bench, max_bench_list, dict_limits

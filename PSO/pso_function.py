@@ -73,6 +73,7 @@ class PSOEnvironment(gym.Env):
         self.dict_global_best = {}
         self.dict_error = {}
         self.dict_centers = {}
+        self.dict_limits = {}
         self.coord_centers = []
         self.max_centers_bench = []
         self.centers = 0
@@ -317,6 +318,7 @@ class PSOEnvironment(gym.Env):
         self.dict_ = {}
         self.dict_error_peak_explore = {}
         self.dict_impo_ = {}
+        self.dict_limits = {}
         self.dict_error_peak = {}
         self.dict_error_explore = {}
         self.assig_centers = np.zeros((self.vehicles, 1))
@@ -870,7 +872,7 @@ class PSOEnvironment(gym.Env):
             done = False
             self.part_ant_explore = copy.copy(self.part_ant)
             self.dict_, self.dict_coord_, self.dict_impo_, self.centers, self.coord_centers, self.dict_index, \
-            self.dict_bench, self.action_zone, self.max_centers_bench, self.max_bench = self.detect_areas.areas_levels(self.mu)
+            self.dict_bench, self.action_zone, self.max_centers_bench, self.max_bench, self.dict_limits = self.detect_areas.areas_levels(self.mu)
             self.plot.action_areas(self.dict_coord_, self.dict_impo_, self.centers)
             self.allocate_vehicles()
             self.obtain_global()
@@ -1120,7 +1122,7 @@ class PSOEnvironment(gym.Env):
         return self.X_test, self.secure, self.bench_function, self.grid_min, self.sigma, \
                self.mu, self.error_data, self.it, self.part_ant, self.bench_array, self.grid_or, self.bench_max, \
                self.dict_mu, self.dict_sigma, self.centers, self.part_ant_exploit, self.dict_centers, self.assig_centers, \
-               self.part_ant_explore, self.final_mu, self.final_sigma
+               self.part_ant_explore, self.final_mu, self.final_sigma, self.dict_limits
 
     def error_value(self):
         return self.error_data
