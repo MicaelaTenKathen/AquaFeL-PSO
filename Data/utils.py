@@ -81,7 +81,7 @@ class Utils:
         self.it.append(g)
         return self.MSE_data, self.it
 
-    def savexlsx(self, sigma_data, mu_data, seed):
+    def savexlsx(self, sigma_data, mu_data, seed, file):
 
         """
         Save the data in excel documents.
@@ -93,24 +93,24 @@ class Utils:
         wb1 = openpyxl.Workbook()
         hoja1 = wb1.active
         hoja1.append(self.MSE_data)
-        wb1.save('Test/LocalBest/ALLCONError' + str(seed[0]) + '.xlsx')
+        wb1.save('Test/' + file + '/ALLCONError' + str(seed[0]) + '.xlsx')
 
         wb2 = openpyxl.Workbook()
         hoja2 = wb2.active
         hoja2.append(sigma_data)
-        wb2.save('Test/LocalBest/ALLCONSigma' + str(seed[0]) + '.xlsx')
+        wb2.save('Test/' + file + '/ALLCONSigma' + str(seed[0]) + '.xlsx')
 
         wb3 = openpyxl.Workbook()
         hoja3 = wb3.active
         hoja3.append(mu_data)
-        wb3.save('Test/LocalBest/ALLCONMu' + str(seed[0]) + '.xlsx')
+        wb3.save('Test/' + file + '/ALLCONMu' + str(seed[0]) + '.xlsx')
 
         wb4 = openpyxl.Workbook()
         hoja4 = wb4.active
         hoja4.append(list(self.distances))
-        wb4.save('Test/LocalBest/ALLCONDistance' + str(seed[0]) + '.xlsx')
+        wb4.save('Test/' + file + '/ALLCONDistance' + str(seed[0]) + '.xlsx')
 
         wb5 = openpyxl.Workbook()
         hoja5 = wb5.active
         hoja5.append(self.it)
-        wb5.save('Test/LocalBest/ALLCONData' + str(seed[0]) + '.xlsx')
+        wb5.save('Test/' + file + '/ALLCONData' + str(seed[0]) + '.xlsx')

@@ -1,7 +1,6 @@
 import openpyxl
 
 from Data.limits import Limits
-from Environment.plot import Plots
 from Environment.map import Map
 from Benchmark.benchmark_functions import Benchmark_function
 from Environment.bounds import Bounds
@@ -149,6 +148,7 @@ class PSOEnvironment(gym.Env):
         self.error_comparison6 = []
         self.error_comparison7 = []
         self.error_comparison8 = []
+        self.error_comparison9 = []
         self.bench_array = []
         self.error_distance = []
         self.duplicate = False
@@ -171,15 +171,10 @@ class PSOEnvironment(gym.Env):
         self.df_bounds, self.X_test = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
         self.secure, self.df_bounds = Bounds(self.resolution, self.xs, self.ys).interest_area()
 
-        # self.secure = navigation_map
-        # print(self.secure)
         self.X_test_y = self.X_test[1]
         self.bench_function = None
 
         self.plot = Plots(self.xs, self.ys, self.X_test, self.secure, self.bench_function, self.grid_min, self.grid_or)
-
-        # self.action_space = gym.spaces.Box(low=0.0, high=4.0, shape=(4,))
-        # self.state_space = gym.spaces.Box()
 
         self.util = Utils(self.vehicles)
 
@@ -285,7 +280,6 @@ class PSOEnvironment(gym.Env):
         self.max_contamination()
         self.generatePart()
         self.tool()
-        #print(self.bench_array)
         random.seed(self.seed)
         self.swarm()
         self.statistic()
@@ -293,7 +287,6 @@ class PSOEnvironment(gym.Env):
         self.detect_areas = DetectContaminationAreas(self.X_test, self.bench_array, vehicles=self.vehicles,
                                                      area=self.xs)
         self.max_peaks = self.detect_areas.real_peaks()
-        #print(self.max_peaks)
         self.state = self.first_values()
         return self.state
 
@@ -442,16 +435,10 @@ class PSOEnvironment(gym.Env):
     def peaks_bench(self):
         for i in range(len(self.index_a)):
             self.max_peaks_bench.append(self.bench_array[round(self.index_a[i])])
-            # print(round(self.index_a[i]))
-        # self.peaks = self.sort_index(self.bench_array)[:self.num_of_peaks]
-        # for i in range(len(self.peaks)):
-        #   self.max_peaks_bench.append(self.bench_array[self.peaks[i]])
 
     def peaks_mu(self):
         self.max_peaks_mu = list()
         for i in range(len(self.index_a)):
-            # print(round(self.index_a[i]))
-            # print('in_here')
             self.max_peaks_mu.append(self.mu[round(self.index_a[i])])
 
     def sigma_max(self):
@@ -514,12 +501,8 @@ class PSOEnvironment(gym.Env):
         duplicate = False
         x_l = copy.copy(self.dict_sample_x["action_zone%s" % action_zone])
         y_l = copy.copy(self.dict_sample_y["action_zone%s" % action_zone])
-        #print("x_h", x_l)
-        #print("y_h", y_l)
         fitness = copy.copy(self.dict_fitness["action_zone%s" % action_zone])
-        #print("fitness", fitness)
         index_action_zone = copy.copy(self.dict_index["action_zone%s" % action_zone])
-        #print(x_bench, y_bench)
         for i in range(len(x_l)):
             if x_l[i] == x_bench and y_l[i] == y_bench:
                 duplicate = True
@@ -622,7 +605,6 @@ class PSOEnvironment(gym.Env):
             if self.n_data > self.vehicles - 1:
                 self.n_data = 0
 
-        # self.MSE_data1, self.it = self.util.mse(self.g, self.bench_array, self.mu)
         self.error = self.calculate_error()
         self.error_data.append(self.error)
         self.it.append(self.g)
@@ -1137,34 +1119,44 @@ class PSOEnvironment(gym.Env):
         wb = openpyxl.Workbook()
         hoja = wb.active
         hoja.append(self.error_comparison1)
-        wb.save('../Test/Chapter/Epsilon/ALLCONError_25.xlsx')
+        wb.save('../Test/' + self.file + '/ALLCONError_25.xlsx')
 
         wb2 = openpyxl.Workbook()
         hoja2 = wb2.active
         hoja2.append(self.error_comparison2)
-        wb2.save('../Test/Chapter/Epsilon/ALLCONError_50.xlsx')
+        wb2.save('../Test/' + self.file + '/ALLCONError_50.xlsx')
 
         wb3 = openpyxl.Workbook()
         hoja3 = wb3.active
         hoja3.append(self.error_comparison3)
-        wb3.save('../Test/Chapter/Epsilon/ALLCONError_75.xlsx')
+        wb3.save('../Test/' + self.file + '/ALLCONError_75.xlsx')
 
         wb4 = openpyxl.Workbook()
         hoja4 = wb4.active
         hoja4.append(self.error_comparison4)
-        wb4.save('../Test/Chapter/Epsilon/ALLCONError_100.xlsx')
+        wb4.save('../Test/' + self.file + '/ALLCONError_100.xlsx')
 
         wb5 = openpyxl.Workbook()
         hoja5 = wb5.active
         hoja5.append(self.error_comparison5)
-        wb5.save('../Test/Chapter/Epsilon/ALLCONError_125.xlsx')
+        wb5.save('../Test/' + self.file + '/ALLCONError_125.xlsx')
 
         wb6 = openpyxl.Workbook()
         hoja6 = wb6.active
         hoja6.append(self.error_comparison6)
-        wb6.save('../Test/Chapter/Epsilon/ALLCONError_150.xlsx')
+        wb6.save('../Test/' + self.file + '/ALLCONError_150.xlsx')
 
         wb7 = openpyxl.Workbook()
         hoja7 = wb7.active
         hoja7.append(self.error_comparison7)
-        wb7.save('../Test/Chapter/Epsilon/ALLCONErrorE_175.xlsx')
+        wb7.save('../Test/' + self.file + '/ALLCONErrorE_175.xlsx')
+
+        wb8 = openpyxl.Workbook()
+        hoja8 = wb8.active
+        hoja8.append(self.error_comparison8)
+        wb8.save('../Test/' + self.file + '/ALLCONErrorE_200.xlsx')
+
+        wb9 = openpyxl.Workbook()
+        hoja9 = wb9.active
+        hoja9.append(self.error_comparison9)
+        wb9.save('../Test/' + self.file + '/ALLCONErrorE_225.xlsx')
