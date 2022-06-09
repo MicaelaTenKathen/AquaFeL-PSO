@@ -69,7 +69,7 @@ vehicles = 4
 method = 0
 pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position, vehicles=vehicles,
                      exploration_distance=100, exploitation_distance=200, reward_function='inc_mse',
-                     type_error='contamination', final_model='action_zone')
+                     type_error='all_map', final_model='action_zone')
 
 # Gaussian process initialization
 
@@ -80,7 +80,7 @@ import matplotlib.pyplot as plt
 error_vec = []
 last_error = []
 
-for i in range(1):
+for i in range(10):
 
     done = False
     state = pso.reset()
@@ -102,14 +102,14 @@ for i in range(1):
     dict_sigma, centers, part_ant_exploit, dict_centers, assig_center, part_ant_explore, final_mu, final_sigma, dict_limits = pso.data_out()
     plot = Plots(xs, ys, X_test, secure, bench_function, grid_min, grid)
     #plot.gaussian(mu, sigma, part_ant)
-    plot.movement_exploration(mu, sigma, part_ant_explore)
-    plot.benchmark()
-    plot.detection_areas(mu, sigma)
-    plot.mu_exploitation(dict_mu, dict_sigma, centers)
+    #plot.movement_exploration(mu, sigma, part_ant_explore)
+    #plot.benchmark()
+    #plot.detection_areas(mu, sigma)
+    #plot.mu_exploitation(dict_mu, dict_sigma, centers)
     distances = pso.distances_data()
-    plot.movement_exploitation(vehicles, dict_mu, dict_sigma, centers, dict_centers, part_ant_exploit, assig_center)
-    plot.plot_classic(final_mu, final_sigma, part_ant)
-    plot.zoom_action_zone(centers, dict_limits, mu, sigma, final_mu, final_sigma)
+    #plot.movement_exploitation(vehicles, dict_mu, dict_sigma, centers, dict_centers, part_ant_exploit, assig_center)
+    #plot.plot_classic(final_mu, final_sigma, part_ant)
+    #plot.zoom_action_zone(centers, dict_limits, mu, sigma, final_mu, final_sigma)
 
     # if i == 0:
     #   MSE_array = pd.DataFrame(mean_MSE)
@@ -142,5 +142,5 @@ for i in range(1):
 # plot.gaussian(mu, sigma, part_ant)
 #plot.benchmark()
 
-#pso.save_excel()
+pso.save_excel()
 # plot.error(error_data, it)

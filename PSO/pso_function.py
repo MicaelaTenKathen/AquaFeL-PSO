@@ -55,6 +55,7 @@ class PSOEnvironment(gym.Env):
         self.k = None
         self.dict_ = {}
         self.max_bench = list()
+        self.file = 'Estancia/MultiPSO'
         self.dict_impo_ = {}
         self.dict_bench = {}
         self.dict_coord_ = {}
@@ -72,6 +73,7 @@ class PSOEnvironment(gym.Env):
         self.dict_global_best = {}
         self.dict_error = {}
         self.dict_centers = {}
+        self.dict_error_comparison = {}
         self.dict_limits = {}
         self.coord_centers = []
         self.max_centers_bench = []
@@ -113,8 +115,9 @@ class PSOEnvironment(gym.Env):
         self.num = 0
         self.save = 0
         self.num_of_peaks = 0
-        self.save_dist = [25, 50, 75, 100, 125, 150, 175, 200]
+        self.save_dist = [25, 50, 75, 100, 125, 150, 175, 200, 225, 250]
         self.seed = initial_seed
+        self.initial_seed = initial_seed
         self.mu = []
         self.sigma = []
         self.final_mu = []
@@ -296,7 +299,6 @@ class PSOEnvironment(gym.Env):
         self.x_h = []
         self.y_h = []
         self.stage = "exploration"
-        self.type_error = 'contamination'
         self.coord_centers = []
         self.max_centers_bench = []
         self.x_p = []
@@ -622,24 +624,14 @@ class PSOEnvironment(gym.Env):
         mult = self.save_dist[self.save]
         mult_min = mult - 5
         mult_max = mult + 5
-        # print(mult, mult_min, mult_max, np.max(self.distances))
         if mult_min <= np.max(self.distances) < mult_max:
             self.ERROR_data = self.calculate_error()
-            # print(np.max(self.distances))
-            if self.save == 0:
-                self.error_comparison1.append(self.ERROR_data)
-            elif self.save == 1:
-                self.error_comparison2.append(self.ERROR_data)
-            elif self.save == 2:
-                self.error_comparison3.append(self.ERROR_data)
-            elif self.save == 3:
-                self.error_comparison4.append(self.ERROR_data)
-            elif self.save == 4:
-                self.error_comparison5.append(self.ERROR_data)
-            elif self.save == 5:
-                self.error_comparison6.append(self.ERROR_data)
-            elif self.save == 6:
-                self.error_comparison7.append(self.ERROR_data)
+            if self.seed == self.initial_seed + 1:
+                error_list = list()
+            else:
+                error_list = copy.copy(self.dict_error_comparison["Distance%s" % self.save])
+            error_list.append(self.ERROR_data)
+            self.dict_error_comparison["Distance%s" % self.save] = copy.copy(error_list)
             self.save += 1
 
     def obtain_max(self, array_function):
@@ -658,7 +650,11 @@ class PSOEnvironment(gym.Env):
 
     def calculate_error(self, dfirts=False):
         if self.type_error == 'all_map':
-            self.error = mean_squared_error(y_true=self.bench_array, y_pred=self.final_mu)
+            if self.stage == 'exploration':
+                self.error = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
+            else:
+                self.replace_action_zones()
+                self.error = mean_squared_error(y_true=self.bench_array, y_pred=self.final_mu)
         elif self.type_error == 'peaks':
             if dfirts:
                 for i in range(len(self.dict_centers)):
@@ -866,12 +862,6 @@ class PSOEnvironment(gym.Env):
                 self.n_data += 1
                 if self.n_data > self.vehicles - 1:
                     self.n_data = 0
-            #self.type_error = 'action_zone'
-            #self.error = self.calculate_error(dfirts=True)
-            #self.error_data.append(self.error)
-            #self.it.append(self.g)
-            #self.type_error = 'peaks'
-            #self.error = self.calculate_error(dfirts=True)
         else:
             done = False
         return self.state, reward, done, {}
@@ -975,18 +965,15 @@ class PSOEnvironment(gym.Env):
 
                         self.samples += 1
 
-                self.type_error = 'action_zone'
                 self.error = self.calculate_error(dfirts=False)
                 self.error_data.append(self.error)
                 self.it.append(self.g)
-                self.type_error = 'peaks'
-                self.error = self.calculate_error(dfirts=False)
 
             dis_steps = np.mean(self.distances) - dist_ant
             if np.max(self.distances) == previous_dist:
                 break
 
-            # self.save_data()
+            self.save_data()
             self.g += 1
             self.g_exploit += 1
 
@@ -998,10 +985,6 @@ class PSOEnvironment(gym.Env):
 
         if (self.distances >= self.exploitation_distance).any() or np.max(self.distances) == self.dist_pre:
             done = True
-            print("MSE action zones exploration", self.dict_error_explore)
-            print("MSE action zones", self.dict_error)
-            print("error peaks exploration", self.dict_error_peak_explore)
-            print("Error peaks", self.dict_error_peak)
         else:
             done = False
         return self.state, reward, done, {}
@@ -1049,9 +1032,6 @@ class PSOEnvironment(gym.Env):
                 self.final_gaussian()
             elif self.final_model == 'action_zone':
                 self.replace_action_zones()
-            self.type_error = 'all_map'
-            self.calculate_error()
-            print("MSE all_map final: ", self.error)
         return self.state, reward, done, {}
 
     def final_gaussian(self):
@@ -1116,47 +1096,48 @@ class PSOEnvironment(gym.Env):
         return self.distances
 
     def save_excel(self):
-        wb = openpyxl.Workbook()
-        hoja = wb.active
-        hoja.append(self.error_comparison1)
-        wb.save('../Test/' + self.file + '/ALLCONError_25.xlsx')
+        for i in range(self.save):
+            wb = openpyxl.Workbook()
+            hoja = wb.active
+            hoja.append(self.dict_error_comparison["Distance%s" % i])
+            wb.save('../Test/' + self.file + '/ALLCONError_' + str(self.save_dist[i]) + '.xlsx')
 
-        wb2 = openpyxl.Workbook()
-        hoja2 = wb2.active
-        hoja2.append(self.error_comparison2)
-        wb2.save('../Test/' + self.file + '/ALLCONError_50.xlsx')
+        #wb2 = openpyxl.Workbook()
+        #hoja2 = wb2.active
+        #hoja2.append(self.error_comparison2)
+        #wb2.save('../Test/' + self.file + '/ALLCONError_50.xlsx')
 
-        wb3 = openpyxl.Workbook()
-        hoja3 = wb3.active
-        hoja3.append(self.error_comparison3)
-        wb3.save('../Test/' + self.file + '/ALLCONError_75.xlsx')
+        #wb3 = openpyxl.Workbook()
+        #hoja3 = wb3.active
+        #hoja3.append(self.error_comparison3)
+        #wb3.save('../Test/' + self.file + '/ALLCONError_75.xlsx')
 
-        wb4 = openpyxl.Workbook()
-        hoja4 = wb4.active
-        hoja4.append(self.error_comparison4)
-        wb4.save('../Test/' + self.file + '/ALLCONError_100.xlsx')
+        #wb4 = openpyxl.Workbook()
+        #hoja4 = wb4.active
+        #hoja4.append(self.error_comparison4)
+        #wb4.save('../Test/' + self.file + '/ALLCONError_100.xlsx')
 
-        wb5 = openpyxl.Workbook()
-        hoja5 = wb5.active
-        hoja5.append(self.error_comparison5)
-        wb5.save('../Test/' + self.file + '/ALLCONError_125.xlsx')
+        #wb5 = openpyxl.Workbook()
+        #hoja5 = wb5.active
+        #hoja5.append(self.error_comparison5)
+        #wb5.save('../Test/' + self.file + '/ALLCONError_125.xlsx')
 
-        wb6 = openpyxl.Workbook()
-        hoja6 = wb6.active
-        hoja6.append(self.error_comparison6)
-        wb6.save('../Test/' + self.file + '/ALLCONError_150.xlsx')
+        #wb6 = openpyxl.Workbook()
+        #hoja6 = wb6.active
+        #hoja6.append(self.error_comparison6)
+        #wb6.save('../Test/' + self.file + '/ALLCONError_150.xlsx')
 
-        wb7 = openpyxl.Workbook()
-        hoja7 = wb7.active
-        hoja7.append(self.error_comparison7)
-        wb7.save('../Test/' + self.file + '/ALLCONErrorE_175.xlsx')
+        #wb7 = openpyxl.Workbook()
+        #hoja7 = wb7.active
+        #hoja7.append(self.error_comparison7)
+        #wb7.save('../Test/' + self.file + '/ALLCONErrorE_175.xlsx')
 
-        wb8 = openpyxl.Workbook()
-        hoja8 = wb8.active
-        hoja8.append(self.error_comparison8)
-        wb8.save('../Test/' + self.file + '/ALLCONErrorE_200.xlsx')
+        #wb8 = openpyxl.Workbook()
+        #hoja8 = wb8.active
+        #hoja8.append(self.error_comparison8)
+        #wb8.save('../Test/' + self.file + '/ALLCONErrorE_200.xlsx')
 
-        wb9 = openpyxl.Workbook()
-        hoja9 = wb9.active
-        hoja9.append(self.error_comparison9)
-        wb9.save('../Test/' + self.file + '/ALLCONErrorE_225.xlsx')
+        #wb9 = openpyxl.Workbook()
+        #hoja9 = wb9.active
+        #hoja9.append(self.error_comparison9)
+        #wb9.save('../Test/' + self.file + '/ALLCONErrorE_225.xlsx')
