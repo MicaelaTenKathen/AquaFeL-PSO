@@ -57,7 +57,7 @@ class DetectContaminationAreas():
         coordinate_action_zones = list()
         mean = mu.flat
         j = 0
-        impo = 200
+        impo = 100
         action_zones = list()
         action_zones_index = list()
         bench_az = list()

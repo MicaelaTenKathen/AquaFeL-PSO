@@ -22,7 +22,7 @@ class Plots():
         self.grid_or = Map(self.xs, ys).black_white()
         self.X1 = np.arange(0, self.grid.shape[1], 1)
         self.Y1 = np.arange(0, self.grid.shape[0], 1)
-        self.cmap1 = LinearSegmentedColormap.from_list('name', ['royalblue', 'coral', 'purple'])
+        self.cmap1 = LinearSegmentedColormap.from_list('name', ['rosybrown', 'sandybrown', 'maroon'])
         self.cmap = LinearSegmentedColormap.from_list('name', ['green', 'yellow', 'red'])
         self.cmap2 = LinearSegmentedColormap.from_list('name', ['red', 'purple'])
         self.cmap3 = LinearSegmentedColormap.from_list('name', ['olive', 'cadetblue'])
@@ -132,9 +132,13 @@ class Plots():
     def benchmark(self):
         plot_bench = np.copy(self.bench_function)
         plot_bench[self.grid_or == 0] = np.nan
+        levels = np.arange(0, 1, 0.2)
+        extent = (0, self.xs, 0, self.ys)
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
         im4 = ax1.imshow(plot_bench.T, interpolation='bilinear', origin='lower', cmap=self.cmapmean)
+        contours = ax1.contour(plot_bench.T, levels, colors='k', origin='lower', extent=extent, alpha=0.5)
+        plt.clabel(contours, inline=True, fontsize=6)
         plt.colorbar(im4, label='µ', shrink=1)
         ax1.set_xlabel("x [m]")
         ax1.set_ylabel("y [m]")
@@ -412,9 +416,17 @@ class Plots():
         Z_var, Z_mean = self.Z_var_mean(mu * 100, sigma)
 
         fig, ax = plt.subplots()
+        levels = np.arange(0, 100, 33)
+        extent = (0, self.xs, 0, self.ys)
+        if plt.rcParams["text.usetex"]:
+            fmt = r'%d \%%'
+        else:
+            fmt = '%d %%'
 
         im3 = ax.imshow(Z_mean.T, interpolation='none', origin='lower', cmap=self.cmap, vmin=0, vmax=100)
         plt.colorbar(im3, ax=ax, label='Contamination [%]', shrink=1.0)
+        contours = ax.contour(Z_mean.T, levels, colors='k', origin='lower', extent=extent, alpha=0.5)
+        plt.clabel(contours, inline=True, fontsize=6, fmt=fmt)
         ax.set_xlabel("x [m]")
         ax.set_ylabel("y [m]")
         ax.set_ylim([self.ys, 0])
@@ -513,10 +525,10 @@ class Plots():
                            "interest and the zoomed chart wiil not be plotted.")
             return
 
-        for k in range(1):
-            srcax.annotate('', xy=srcCorners[corners[k]], xycoords="data",
-                           xytext=dstCorners[corners[k]], textcoords="figure fraction",
-                           arrowprops=arrowKwargs)
+        #for k in range(1):
+         #   srcax.annotate('', xy=srcCorners[corners[k]], xycoords="data",
+          #                 xytext=dstCorners[corners[k]], textcoords="figure fraction",
+           #                arrowprops=arrowKwargs)
 
     def zoom_action_zone(self, centers, dict_limits, mu, sigma, final_mu, final_sigma):
         rows = centers

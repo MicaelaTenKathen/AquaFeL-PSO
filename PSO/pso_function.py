@@ -47,6 +47,7 @@ class PSOEnvironment(gym.Env):
                  stage='exploration', final_model='samples'):
         self.type_error = type_error
         self.final_model = final_model
+        self.initial_stage = stage
         self.exploration_distance = exploration_distance
         self.exploitation_distance = exploitation_distance
         self.stage = stage
@@ -55,7 +56,7 @@ class PSOEnvironment(gym.Env):
         self.k = None
         self.dict_ = {}
         self.max_bench = list()
-        self.file = 'MultiPSO'
+        self.file = 'MultiPSO/Explore50Exploit200'
         self.dict_impo_ = {}
         self.dict_bench = {}
         self.dict_coord_ = {}
@@ -298,7 +299,7 @@ class PSOEnvironment(gym.Env):
         self.k = None
         self.x_h = []
         self.y_h = []
-        self.stage = "exploration"
+        self.stage = self.initial_stage
         self.coord_centers = []
         self.max_centers_bench = []
         self.x_p = []
@@ -650,7 +651,7 @@ class PSOEnvironment(gym.Env):
 
     def calculate_error(self, dfirts=False):
         if self.type_error == 'all_map':
-            if self.stage == 'exploration':
+            if self.stage == 'exploration' or self.stage == 'no_exploitation':
                 self.error = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
             else:
                 self.replace_action_zones()
@@ -837,7 +838,7 @@ class PSOEnvironment(gym.Env):
             if np.max(self.distances) == previous_dist:
                 break
 
-            self.save_data()
+            #self.save_data()
             self.g += 1
 
         self.return_state()
@@ -847,21 +848,23 @@ class PSOEnvironment(gym.Env):
         self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
 
         if (self.distances >= self.exploration_distance).any() or np.max(self.distances) == self.dist_pre:
-            done = False
-            self.part_ant_explore = copy.copy(self.part_ant)
-            self.dict_, self.dict_coord_, self.dict_impo_, self.centers, self.coord_centers, self.dict_index, \
-            self.dict_bench, self.action_zone, self.max_centers_bench, self.max_bench, self.dict_limits = self.detect_areas.areas_levels(self.mu)
-            self.plot.action_areas(self.dict_coord_, self.dict_impo_, self.centers)
-            self.allocate_vehicles()
-            self.obtain_global()
-            for part in self.pop:
-                self.part_ant_exploit, self.distances_exploit = self.util.distance_part(self.g_exploit, self.n_data, part,
-                                                                                        self.part_ant_exploit,
-                                                                                        self.distances_exploit, self.array_part,
-                                                                                        dfirst=True)
-                self.n_data += 1
-                if self.n_data > self.vehicles - 1:
-                    self.n_data = 0
+            if self.stage == 'no_exploitation':
+                done = True
+            else:
+                done = False
+                self.part_ant_explore = copy.copy(self.part_ant)
+                self.dict_, self.dict_coord_, self.dict_impo_, self.centers, self.coord_centers, self.dict_index, \
+                self.dict_bench, self.action_zone, self.max_centers_bench, self.max_bench, self.dict_limits = self.detect_areas.areas_levels(self.mu)
+                self.allocate_vehicles()
+                self.obtain_global()
+                for part in self.pop:
+                    self.part_ant_exploit, self.distances_exploit = self.util.distance_part(self.g_exploit, self.n_data, part,
+                                                                                            self.part_ant_exploit,
+                                                                                            self.distances_exploit, self.array_part,
+                                                                                            dfirst=True)
+                    self.n_data += 1
+                    if self.n_data > self.vehicles - 1:
+                        self.n_data = 0
         else:
             done = False
         return self.state, reward, done, {}
@@ -973,7 +976,7 @@ class PSOEnvironment(gym.Env):
             if np.max(self.distances) == previous_dist:
                 break
 
-            self.save_data()
+            #self.save_data()
             self.g += 1
             self.g_exploit += 1
 
@@ -1000,13 +1003,13 @@ class PSOEnvironment(gym.Env):
                 z += 1
                 self.state[z + 6] = part.best[0]
                 self.state[z + 7] = part.best[1]
-                if self.n_data == self.vehicles - 1:
-                    self.state[16] = self.best[0]
-                    self.state[17] = self.best[1]
-                    self.state[18] = self.sigma_best[0]
-                    self.state[19] = self.sigma_best[1]
-                    self.state[20] = self.mu_best[0]
-                    self.state[21] = self.mu_best[1]
+                #if self.n_data == self.vehicles - 1:
+                 #   self.state[16] = self.best[0]
+                  ##  self.state[17] = self.best[1]
+                    #self.state[18] = self.sigma_best[0]
+                    #self.state[19] = self.sigma_best[1]
+                    #self.state[20] = self.mu_best[0]
+                    #self.state[21] = self.mu_best[1]
             else:
                 posx = 2 * z
                 posy = (2 * z) + 1
@@ -1027,11 +1030,28 @@ class PSOEnvironment(gym.Env):
         elif self.stage == "exploitation":
             action = np.array([3.6845, 1.5614, 0, 3.1262])
             self.state, reward, done, dic = self.step_stage_exploitation(action)
+        elif self.stage == "no_exploitation":
+            action = np.array([2.0187, 0, 3.2697, 0])
+            self.exploration_distance = self.exploitation_distance
+            self.state, reward, done, dic = self.step_stage_exploration(action)
+            if (self.distances >= self.exploration_distance).any() or np.max(self.distances) == self.dist_pre:
+                done = True
         if done:
             if self.final_model == 'samples':
                 self.final_gaussian()
             elif self.final_model == 'action_zone':
                 self.replace_action_zones()
+            #self.plot.action_areas(self.dict_coord_, self.dict_impo_, self.centers)
+            #print("MSE map:", self.error)
+            self.type_error = 'action_zone'
+            self.calculate_error()
+            print("MSE az:", self.dict_error)
+            self.type_error = 'peaks'
+            self.calculate_error()
+            print("Error peak:", self.dict_error_peak)
+            self.type_error = 'all_map'
+            self.calculate_error()
+            #print("MSE map:", self.error)
         return self.state, reward, done, {}
 
     def final_gaussian(self):

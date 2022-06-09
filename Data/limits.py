@@ -49,10 +49,6 @@ class Limits:
         n_dat = n_data + 1
         x_int = int(part[0])
         y_int = int(part[1])
-        s_1 = s_n[0]
-        s_2 = s_n[1]
-        s_3 = s_n[2]
-        s_4 = s_n[3]
         if x_int >= self.xs:
             part[0] = self.xs - 1
             x_int = int(part[0])
