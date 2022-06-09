@@ -55,7 +55,7 @@ class PSOEnvironment(gym.Env):
         self.k = None
         self.dict_ = {}
         self.max_bench = list()
-        self.file = 'Estancia/MultiPSO'
+        self.file = 'MultiPSO'
         self.dict_impo_ = {}
         self.dict_bench = {}
         self.dict_coord_ = {}
