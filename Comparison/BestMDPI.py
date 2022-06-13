@@ -47,9 +47,9 @@ df_bounds: data of the limits of the surface where the drone can travel
 # Variables initialization
 
 
-#action = np.array([3.6845, 1.5614, 0, 3.1262]) # Syracuse (Exploitation)
-action = np.array([2.0187, 0, 3.2697, 0]) #Rome (Exploration)
-#action = np.array([0, 0, 0, 3])
+action = np.array([3.6845, 1.5614, 0, 3.1262]) # Syracuse (Exploitation)
+#action = np.array([2.0187, 0, 3.2697, 0]) #Rome (Exploration)
+#action = np.array([2, 2, 0, 0])
 
 initial_position = np.array([[0, 0],
                              [8, 56],
@@ -66,10 +66,12 @@ start_time = time.time()
 
 # PSO initialization
 vehicles = 4
+stage = 'exploration'
+#stage = 'no_exploitation'
 method = 0
 pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position, vehicles=vehicles,
                      exploration_distance=100, exploitation_distance=200, reward_function='inc_mse',
-                     type_error='all_map', stage='exploration', final_model='action_zone')
+                     type_error='all_map', stage=stage, final_model='action_zone')
 
 # Gaussian process initialization
 
@@ -100,7 +102,8 @@ for i in range(10):
         n = error_data.shape[0] - 1
     X_test, secure, bench_function, grid_min, sigma, mu, MSE_data, it, part_ant, y_data, grid, bench_max, dict_mu, \
     dict_sigma, centers, part_ant_exploit, dict_centers, assig_center, part_ant_explore, final_mu, final_sigma, dict_limits = pso.data_out()
-    #plot = Plots(xs, ys, X_test, secure, bench_function, grid_min, grid)
+    plot = Plots(xs, ys, X_test, secure, bench_function, grid_min, grid, stage)
+    centers_bench, dict_limits_bench, dict_coord = pso.return_bench()
     #plot.gaussian(mu, sigma, part_ant)
     #plot.movement_exploration(mu, sigma, part_ant_explore)
     #plot.movement_exploration(mu, sigma, part_ant)
@@ -110,7 +113,8 @@ for i in range(10):
     #distances = pso.distances_data()
     #plot.movement_exploitation(vehicles, dict_mu, dict_sigma, centers, dict_centers, part_ant_exploit, assig_center)
     #plot.plot_classic(final_mu, final_sigma, part_ant)
-    #plot.zoom_action_zone(centers, dict_limits, mu, sigma, final_mu, final_sigma)
+    #plot.zoom_action_zone(centers_bench, dict_limits_bench, mu, sigma, final_mu, final_sigma)
+    #print(centers_bench, dict_limits_bench, dict_coord)
 
     # if i == 0:
     #   MSE_array = pd.DataFrame(mean_MSE)

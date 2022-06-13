@@ -74,8 +74,11 @@ class Benchmark_function():
               #  self.c.append(5)
             #self.a = np.array(self.a)
             #self.c = np.array(self.c).T
-            #num_of_peaks = np.random.RandomState(self.seed).randint(low=2, high=self.vehicles)
-            num_of_peaks = 4
+            if self.vehicles == 2:
+                num_of_peaks = 2
+            else:
+                num_of_peaks = np.random.RandomState(self.seed).randint(low=2, high=self.vehicles)
+            #num_of_peaks = 4
             #self.a1 = np.random.RandomState(self.seed).random(size=(num_of_peaks, 2))
             #self.a = np.array([[0.5, 0.5], [0.25, 0.25], [0.25, 0.75], [0.9, 0.1]]) * 100
             #print(self.a)
@@ -93,10 +96,12 @@ class Benchmark_function():
                 #arr = arr[::-1]
                 #self.a.append(arr)
             random.seed(self.seed)
-            zone = random.sample(range(4), num_of_peaks)
-            #zone = list()
-            #for i in range(num_of_peaks):
-             #   zone.append(random.randint(0, 3))
+            if self.vehicles <= 4:
+                zone = random.sample(range(4), num_of_peaks)
+            else:
+                zone = list()
+                for i in range(num_of_peaks):
+                    zone.append(random.randint(0, 3))
             #print(zone)
             #zone = [random.randrange(1, 4, 1) for i in range(num_of_peaks)]
             for i in range(len(zone)):

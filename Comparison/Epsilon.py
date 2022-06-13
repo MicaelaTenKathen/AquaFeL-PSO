@@ -50,16 +50,26 @@ initial_position = np.array([[0, 0],
                              [8, 56],
                              [37, 16],
                              [78, 81],
-                             [74, 124]])
+                             [74, 124],
+                             [20, 40],
+                             [32, 92],
+                             [64, 60],
+                             [52, 10],
+                             [91, 113],
+                             [49, 51]])
 start_time = time.time()
 
 # PSO initialization
 
 seed = 1000001
 seed_epsilon = 1000000
+vehicles = 2
+#stage = 'exploration'
+stage = 'no_exploitation'
 method = 0
-pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position,
-                     reward_function='inc_mse', type_error='contamination')
+pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position, vehicles=vehicles,
+                     exploration_distance=100, exploitation_distance=200, reward_function='inc_mse',
+                     type_error='all_map', stage=stage, final_model='action_zone')
 # Gaussian process initialization
 
 
@@ -112,7 +122,7 @@ for i in range(10):
     #plt.grid()
     #plt.show()
     print('GT:', i)
-    print('Mean:', MSE_data[-1])
+    print('MSE:', MSE_data[-1])
 
 
 X_test, secure, bench_function, grid_min, sigma, \
@@ -122,5 +132,5 @@ plot = Plots(xs, ys, X_test, grid, bench_function, grid_min)
 #plot.plot_classic(mu, sigma, part_ant)
 # plot.benchmark()
 #plot.error(MSE_data, it)
-pso.save_excel()
+#pso.save_excel()
 

@@ -6,15 +6,16 @@ from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 from Environment.map import Map
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.patches import Rectangle, ConnectionPatch
+from matplotlib.patches import Rectangle
 import copy
 
 
 class Plots():
-    def __init__(self, xs, ys, X_test, grid, bench_function, grid_min, grid_or):
+    def __init__(self, xs, ys, X_test, grid, bench_function, grid_min, grid_or, stage):
         self.xs = xs
         self.ys = ys
         self.grid_or = grid_or
+        self.stage = stage
         self.X_test = X_test
         self.grid = grid
         self.bench_function = bench_function
@@ -22,7 +23,7 @@ class Plots():
         self.grid_or = Map(self.xs, ys).black_white()
         self.X1 = np.arange(0, self.grid.shape[1], 1)
         self.Y1 = np.arange(0, self.grid.shape[0], 1)
-        self.cmap1 = LinearSegmentedColormap.from_list('name', ['rosybrown', 'sandybrown', 'maroon'])
+        self.cmap1 = LinearSegmentedColormap.from_list('name', ['peachpuff', 'tomato', 'maroon'])
         self.cmap = LinearSegmentedColormap.from_list('name', ['green', 'yellow', 'red'])
         self.cmap2 = LinearSegmentedColormap.from_list('name', ['red', 'purple'])
         self.cmap3 = LinearSegmentedColormap.from_list('name', ['olive', 'cadetblue'])
@@ -562,7 +563,11 @@ class Plots():
         plt.tight_layout()
 
         for k in range(centers):
-            for i in range(2):
+            if self.stage == 'no_exploitation':
+                val = 1
+            else:
+                val = 2
+            for i in range(val):
                 if i == 0:
                     matrix_sigma, matrix_mu = self.Z_var_mean(mu, sigma)
                 else:
