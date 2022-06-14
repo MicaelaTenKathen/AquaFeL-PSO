@@ -71,7 +71,7 @@ stage = 'exploration'
 method = 0
 pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position, vehicles=vehicles,
                      exploration_distance=100, exploitation_distance=200, reward_function='inc_mse',
-                     type_error='all_map', stage=stage, final_model='action_zone')
+                     type_error='all_map', stage=stage, final_model='centralized')
 
 # Gaussian process initialization
 
@@ -83,7 +83,7 @@ error_vec = []
 last_error = []
 
 for i in range(10):
-
+    time_init = time.time()
     done = False
     state = pso.reset()
     R_vec = []
@@ -135,6 +135,7 @@ for i in range(10):
     # conf_total = std_total * 1.96
     print('GT:', i)
     print('MSE:', error_data[-1])
+    print('Time:', time.time() - time_init)
     # print('Bench:', bench_max)
     # print('Std:', std_total)
     # print('Conf:', conf_total)

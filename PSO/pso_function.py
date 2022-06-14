@@ -660,9 +660,9 @@ class PSOEnvironment(gym.Env):
             if self.stage == 'exploration' or self.stage == 'no_exploitation':
                 self.error = mean_squared_error(y_true=self.bench_array, y_pred=self.mu)
             else:
-                if self.final_model == 'samples':
+                if self.final_model == 'centralized':
                     self.final_gaussian()
-                elif self.final_model == 'action_zone':
+                elif self.final_model == 'federated':
                     self.replace_action_zones()
                 self.error = mean_squared_error(y_true=self.bench_array, y_pred=self.final_mu)
         elif self.type_error == 'peaks':
@@ -685,9 +685,9 @@ class PSOEnvironment(gym.Env):
                             break
                     self.dict_error_peak["action_zone%s" % i] = abs(self.max_bench_list[i] - max_az)
             else:
-                if self.final_model == 'samples':
+                if self.final_model == 'centralized':
                     self.final_gaussian()
-                elif self.final_model == 'action_zone':
+                elif self.final_model == 'federated':
                     self.replace_action_zones()
                 for i in range(len(self.center_peaks_bench)):
                     coord = self.center_peaks_bench[i]
@@ -733,9 +733,9 @@ class PSOEnvironment(gym.Env):
                     self.dict_error["action_zone%s" % i] = copy.copy(error_action)
                 self.error = mean_squared_error(y_true=self.action_zone_bench, y_pred=estimated_all)
             else:
-                if self.final_model == 'samples':
+                if self.final_model == 'centralized':
                     self.final_gaussian()
-                elif self.final_model == 'action_zone':
+                elif self.final_model == 'federated':
                     self.replace_action_zones()
                 estimated_all = list()
                 for i in range(len(self.center_peaks_bench)):
@@ -925,7 +925,7 @@ class PSOEnvironment(gym.Env):
                         best.fitness.values = part.fitness.values
             self.dict_global_best["action_zone%s" % i] = best
 
-    def step_stage_exploitation(self, action):
+    def step_stage_exploitation_federated(self, action):
 
         """
         The output "out" of the method "step" is the positions of the particles (drones) after traveling 1000 m
@@ -1034,6 +1034,129 @@ class PSOEnvironment(gym.Env):
             done = False
         return self.state, reward, done, {}
 
+    def step_stage_exploitation_centralized(self, action):
+
+        """
+        The output "out" of the method "step" is the positions of the particles (drones) after traveling 1000 m
+        (scaled).
+
+        method = 0 -> out = scalar vector
+        out = [px_1, py_1, px_2, py_2, px_3, py_3, px_4, py_4, lbx_1, lby_1, lbx_2, lby_2, lbx_3, lby_3, lbx_4, lby_4,
+               gbx, gby, sbx, sgy, mbx, mby]
+               where:
+               px: x coordinate of the drone position
+               py: y coordinate of the drone position
+               lbx: x coordinate of the local best
+               lby: y coordinate of the local best
+               gbx: x coordinate of the global best
+               gby: y coordinate of the global best
+               sbx: x coordinate of the sigma best (maximum uncertainty)
+               sby: y coordinate of the sigma best (maximum uncertainty)
+               mbx: x coordinate of the mean best (maximum contamination)
+               mby: y coordinate of the mean best (maximum contamination)
+
+        method = 1 -> out = images
+
+        :param c1: weight that determinate the importance of the local best component
+        :param c2: weight that determinate the importance of the global best component
+        :param c3: weight that determinate the importance of the maximum uncertainty component
+        :param c4: weight that determinate the importance of the maximum contamination component
+        :param lam: ratio of one of the different length scales [Equation 7
+        (https://doi.org/10.3390/electronics10131605)]
+        :param post_array: refers to the posterior length scale of the surrogate model [Equation 7
+        (https://doi.org/10.3390/electronics10131605)]
+        """
+        dis_steps = 0
+        dist_ant = np.mean(self.distances)
+        self.dist_pre = np.max(self.distances)
+        self.n_data = 0
+        self.f += 1
+
+        while dis_steps < 10:
+
+            previous_dist = np.max(self.distances)
+            asv = 0
+            for part in self.pop:
+                action_zone = int(self.assig_centers[asv])
+                self.obtain_max_centralized(action_zone)
+                self.best = self.dict_global_best["action_zone%s" % action_zone]
+                self.toolbox.update(action[0], action[1], action[2], action[3], part)
+                asv += 1
+
+            for part in self.pop:
+                self.ok, part = self.pso_fitness(part)
+                self.part_ant, self.distances = self.util.distance_part(self.g, self.n_data, part, self.part_ant,
+                                                                        self.distances, self.array_part, dfirst=False)
+
+                self.n_data += 1
+                if self.n_data > self.vehicles - 1:
+                    self.n_data = 0
+
+            if (np.mean(self.distances) - self.last_sample) >= (np.min(self.post_array) * self.lam):
+                self.k += 1
+                self.ok = True
+                self.last_sample = np.mean(self.distances)
+
+                for part in self.pop:
+                    self.ok, part = self.pso_fitness(part)
+
+                    self.post_array = self.gp_regression()
+
+                    self.samples += 1
+
+                    self.n_data += 1
+                    if self.n_data > self.vehicles - 1:
+                        self.n_data = 0
+
+                self.error = self.calculate_error()
+                self.error_data.append(self.error)
+                self.it.append(self.g)
+
+                self.ok = False
+
+            dis_steps = np.mean(self.distances) - dist_ant
+            if np.max(self.distances) == previous_dist:
+                break
+
+            # self.save_data()
+            self.g += 1
+
+        self.return_state()
+
+        reward = self.calculate_reward()
+
+        self.logbook.record(gen=self.g, evals=len(self.pop), **self.stats.compile(self.pop))
+
+        if (self.distances >= self.exploitation_distance).any() or np.max(self.distances) == self.dist_pre:
+            done = True
+        else:
+            done = False
+        return self.state, reward, done, {}
+
+    def obtain_max_centralized(self, action_zone):
+        index = copy.copy(self.dict_index["action_zone%s" % action_zone])
+        mu_max = 0
+        sigma_max = 0
+        for i in range(len(index)):
+            if i == 0:
+                mu_max = self.mu[index[i]]
+                index_max_mu = i
+                sigma_max = self.sigma[index[i]]
+                index_max_sigma = i
+            else:
+                if mu_max < self.mu[index[i]]:
+                    mu_max = self.mu[index[i]]
+                    index_max_mu = i
+                else:
+                    continue
+                if sigma_max < self.sigma[index[i]]:
+                    sigma_max = self.sigma[index[i]]
+                    index_max_sigma = i
+                else:
+                    continue
+        self.mu_best = self.X_test[index[index_max_mu]]
+        self.sigma_best = self.X_test[index[index_max_sigma]]
+
     def return_state(self):
         z = 0
         for part in self.pop:
@@ -1071,7 +1194,10 @@ class PSOEnvironment(gym.Env):
                 self.stage = "exploitation"
         elif self.stage == "exploitation":
             action = np.array([3.6845, 1.5614, 0, 3.1262])
-            self.state, reward, done, dic = self.step_stage_exploitation(action)
+            if self.final_model == 'federated':
+                self.state, reward, done, dic = self.step_stage_exploitation_federated(action)
+            elif self.final_model == 'centralized':
+                self.state, reward, done, dic = self.step_stage_exploitation_centralized(action)
         elif self.stage == "no_exploitation":
             action = action
             self.exploration_distance = self.exploitation_distance
@@ -1080,9 +1206,9 @@ class PSOEnvironment(gym.Env):
                 done = True
         if done:
             if self.stage != 'no_exploitation':
-                if self.final_model == 'samples':
+                if self.final_model == 'centralized':
                     self.final_gaussian()
-                elif self.final_model == 'action_zone':
+                elif self.final_model == 'federated':
                     self.replace_action_zones()
             #self.plot.action_areas(self.dict_coord_, self.dict_impo_, self.centers)
             #self.plot.action_areas(self.dict_coord_bench, self.dict_impo_bench, self.centers_bench)
