@@ -56,12 +56,13 @@ class DetectContaminationAreas():
         array_action_zones = list()
         coordinate_action_zones = list()
         mean = mu.flat
+        warning_level = max(mean) * 0.33
         j = 0
         impo = self.vehicles * 10 + 10
         action_zones = list()
         cen = 0
         for i in range(len(mean)):
-            if mean[i] >= 0.33:
+            if mean[i] >= warning_level:
                 array_action_zones.append(mean[i])
                 coordinate_action_zones.append(self.coord[i])
         while cen < self.vehicles:
@@ -138,21 +139,26 @@ class DetectContaminationAreas():
         array_action_zones_bench = list()
         coordinate_action_zones_bench = list()
         bench = copy.copy(self.benchmark)
+        index_xtest = list()
+        index_center_bench = list()
         j = 0
         array_max_x_bench = list()
         array_max_y_bench = list()
         max_bench_list = list()
         action_zone_bench = list()
+        warning_bench = max(bench) * 0.33
         impo = self.vehicles * 10 + 10
         cen = 0
 
         for i in range(len(bench)):
-            if bench[i] >= 0.33:
+            if bench[i] >= warning_bench:
                 array_action_zones_bench.append(bench[i])
                 coordinate_action_zones_bench.append(self.coord_bench[i])
+                index_xtest.append(i)
         while cen < self.vehicles:
             max_action_zone_bench = max(array_action_zones_bench)
             max_index_bench = array_action_zones_bench.index(max_action_zone_bench)
+            index_center_bench.append(index_xtest[max_index_bench])
             max_coordinate_bench = coordinate_action_zones_bench[max_index_bench]
             max_bench_list.append(max_action_zone_bench)
             x_max_bench = max_coordinate_bench[0]
@@ -167,6 +173,7 @@ class DetectContaminationAreas():
                     index_del = i - m
                     del array_action_zones_bench[index_del]
                     del coordinate_action_zones_bench[index_del]
+                    del index_xtest[index_del]
                     m += 1
             if len(array_action_zones_bench) == 0:
                 break
@@ -214,4 +221,5 @@ class DetectContaminationAreas():
             dict_impor_bench["action_zone%s" % j] = list_impo
             impo -= 10
             j += 1
-        return j, dict_index_bench, dict_bench_, dict_coord_bench, center_peaks_bench, max_bench_list, dict_limits_bench, action_zone_bench, dict_impor_bench
+        return j, dict_index_bench, dict_bench_, dict_coord_bench, center_peaks_bench, max_bench_list, \
+               dict_limits_bench, action_zone_bench, dict_impor_bench, index_center_bench

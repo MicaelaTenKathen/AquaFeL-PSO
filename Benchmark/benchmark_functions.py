@@ -74,6 +74,7 @@ class Benchmark_function():
               #  self.c.append(5)
             #self.a = np.array(self.a)
             #self.c = np.array(self.c).T
+            ve = 4
             if self.vehicles == 2:
                 num_of_peaks = 2
             else:
@@ -197,7 +198,7 @@ class Benchmark_function():
         #bench_function = np.array(self.bench)  # Return solo esto de benchmark function
 
         bench = list()
-        df_bounds_or, X_test_or = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
+        df_bounds_or, X_test_or, bench_list = Bounds(self.resolution, self.xs, self.ys, load_file=False).map_bound()
         for i in range(len(X_test_or)):
             bench.append(map_created[X_test_or[i][0], X_test_or[i][1]])
 

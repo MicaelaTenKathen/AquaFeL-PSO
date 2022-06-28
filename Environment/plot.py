@@ -11,7 +11,7 @@ import copy
 
 
 class Plots():
-    def __init__(self, xs, ys, X_test, grid, bench_function, grid_min, grid_or, stage):
+    def __init__(self, xs, ys, X_test, grid, bench_function, grid_min, grid_or, stage='exploration'):
         self.xs = xs
         self.ys = ys
         self.grid_or = grid_or
@@ -414,10 +414,13 @@ class Plots():
                 ax.plot(x, y, 'kx')
 
     def detection_areas(self, mu, sigma):
-        Z_var, Z_mean = self.Z_var_mean(mu * 100, sigma)
+        max_mu = max(mu)
+        Z_var, Z_mean = self.Z_var_mean((mu * 100) / max_mu, sigma)
+        #Z_var, Z_mean = self.Z_var_mean(mu, sigma)
 
         fig, ax = plt.subplots()
         levels = np.arange(0, 100, 33)
+        #levels = np.arange(0, 1, 0.2)
         extent = (0, self.xs, 0, self.ys)
         if plt.rcParams["text.usetex"]:
             fmt = r'%d \%%'
@@ -428,6 +431,36 @@ class Plots():
         plt.colorbar(im3, ax=ax, label='Contamination [%]', shrink=1.0)
         contours = ax.contour(Z_mean.T, levels, colors='k', origin='lower', extent=extent, alpha=0.5)
         plt.clabel(contours, inline=True, fontsize=6, fmt=fmt)
+        ax.set_xlabel("x [m]")
+        ax.set_ylabel("y [m]")
+        ax.set_ylim([self.ys, 0])
+        ax.set_aspect('equal')
+        ax.grid(True)
+        ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        ax.xaxis.set_major_formatter(ticks_x)
+
+        ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        ax.yaxis.set_major_formatter(ticks_y)
+        # plt.savefig("../Image/Contamination/GT3/Ground3.png")
+        plt.show()
+
+    def mean_map(self, mu, sigma):
+        Z_var, Z_mean = self.Z_var_mean(mu, sigma)
+        #Z_var, Z_mean = self.Z_var_mean(mu, sigma)
+
+        fig, ax = plt.subplots()
+        #levels = np.arange(0, 100, 33)
+        levels = np.arange(0, 1, 0.2)
+        extent = (0, self.xs, 0, self.ys)
+        if plt.rcParams["text.usetex"]:
+            fmt = r'%d \%%'
+        else:
+            fmt = '%d %%'
+
+        im3 = ax.imshow(Z_mean.T, interpolation='none', origin='lower', cmap='jet', vmin=0, vmax=1)
+        plt.colorbar(im3, ax=ax, label='µ', shrink=1.0)
+        contours = ax.contour(Z_mean.T, levels, colors='k', origin='lower', extent=extent, alpha=0.5)
+        plt.clabel(contours, inline=True, fontsize=6)
         ax.set_xlabel("x [m]")
         ax.set_ylabel("y [m]")
         ax.set_ylim([self.ys, 0])
@@ -545,16 +578,16 @@ class Plots():
         bottom, top = 0.1, 1.5
         left, right = 0.1, 2.5
         im = ax.imshow(plot_bench.T, interpolation='bilinear', origin='lower', cmap=self.cmapmean, vmin=0, vmax=1.0)
-        ax.set_xlabel("x [m]")
-        ax.set_ylabel("y [m]")
+        ax.set_xlabel("x [km]")
+        ax.set_ylabel("y [km]")
         ax.set_title("Ground Truth")
         ax.set_aspect('equal')
         ax.set_ylim([self.ys, 0])
         ax.grid(True)
-        ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x / 10), ','))
         ax.xaxis.set_major_formatter(ticks_x)
 
-        ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+        ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x / 10), ','))
         ax.yaxis.set_major_formatter(ticks_y)
         h = 0
         fig.subplots_adjust(top=0.85, bottom=bottom, left=left, right=right, hspace=0.6, wspace=0.40)
@@ -587,10 +620,10 @@ class Plots():
                 self.zoom_outside(ax, limits, ax1, "Action Zone%s" % str(k + 1), colors[k])
                 ax.text(limits[0] + 2, limits[1] - 2, "AZ%s" % str(k + 1))
 
-                ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+                ticks_x = ticker.FuncFormatter(lambda x, pos: format(int(x / 10), ','))
                 ax1.xaxis.set_major_formatter(ticks_x)
 
-                ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x * 100), ','))
+                ticks_y = ticker.FuncFormatter(lambda x, pos: format(int(x / 10), ','))
                 ax1.yaxis.set_major_formatter(ticks_y)
                 h += 1
 

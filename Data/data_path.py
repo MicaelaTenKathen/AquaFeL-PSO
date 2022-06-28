@@ -23,6 +23,9 @@ def map_path_classic():
 def bounds_path_classic():
     return '../GroundTruth/bounds.npy'
 
+def boundsy_path_classic():
+    return '../GroundTruth/boundsy.npy'
+
 def grid_path_classic():
     return '../GroundTruth/grid.npy'
 

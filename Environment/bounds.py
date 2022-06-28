@@ -98,6 +98,19 @@ class Bounds():
             # bp = bounds_path()
             # gp = grid_path()
             # ap = available_path()
+            x = list()
+            y = list()
+            for i in range(len(available)):
+                coord = available[i]
+                x_av = coord[0]
+                y_av = coord[1]
+                x.append(x_av)
+                y.append(y_av)
+            min_x = min(x)
+            max_x = max(x)
+            min_y = min(y)
+            max_y = max(y)
+            bench_limits = [min_x, max_x, min_y, max_y]
 
             with open(bp, 'wb') as bn:
                 np.save(bn, df_bounds)
@@ -108,7 +121,7 @@ class Bounds():
             with open(ap, 'wb') as av:
                 np.save(av, available)
 
-            return df_bounds, available
+            return df_bounds, available, bench_limits
 
     def interest_area(self):
         if self.load_file:
@@ -119,7 +132,7 @@ class Bounds():
                 se_available = np.load(sa)
             return secure_grid, se_available
         else:
-            df_bounds, available = Bounds(self.resolution, self.xs, self.ys).map_bound()
+            df_bounds, available, bench_limits = Bounds(self.resolution, self.xs, self.ys).map_bound()
             secure_grid = np.zeros((self.xs, self.ys))
 
             for i in range(len(df_bounds)):
@@ -167,3 +180,54 @@ class Bounds():
                 np.save(sa, se_available)
 
             return secure_grid, df_bounds
+
+    def bounds_y(self):
+        available, x_first, last_y, y_first, x_last, y_last = list(), list(), list(), list(), list(), list()
+        confirm = list()
+        index, first_y, last_x, all_x, y_last = list(), list(), list(), list(), list()
+        grid = Map(self.xs, self.ys).black_white()
+        bound = True
+
+        f, o = True, False
+        for i in range(self.xs):
+            for j in range(self.ys):
+                if grid[i, j] == 1:
+                    if bound:
+                        x_first.append(i)
+                        y_first.append(j)
+                        bound = False
+                    grid_ant = i
+                    grid_y = j
+                else:
+                    if not bound:
+                        x_last.append(grid_ant)
+                        y_last.append(grid_y)
+                        bound = True
+
+        for i in range(len(x_first)):
+            if y_first[i] == y_last[i]:
+                confirm.append(True)
+
+        if np.array(confirm).all():
+            for i in range(len(y_first)):
+                first_y.append(y_first[i] + 2)
+                last_y.append(y_last[i] - 2)
+                all_x.append(x_first[i])
+
+            for x in range(2):
+                del first_y[0]
+                del last_y[0]
+                del all_x[0]
+                del first_y[-1]
+                del last_y[-1]
+                del all_x[-1]
+            bounds = {'First Y': first_y, 'Last Y': last_y, 'X': all_x}
+            df_bounds_x = pd.DataFrame(data=bounds)
+        else:
+            print('An error occurred. Map bound, y array')
+
+        bp = boundsy_path_classic()
+        with open(bp, 'wb') as bn:
+            np.save(bn, df_bounds_x)
+
+        return df_bounds_x

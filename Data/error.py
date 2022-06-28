@@ -123,7 +123,7 @@ save = [25, 50, 75, 100, 125, 150, 175, 200]
 
 for i in range(len(save)):
     #if save[i] <= 100:
-    mean, conf = data_val('../Test/MultiPSO/Explore50Exploit200/ALLCONError_'+str(save[i]) + '.xlsx')
+    mean, conf = data_val('../Test/MultiPSO/4Vehicles/Explore50Exploit200/ALLCONError_'+str(save[i]) + '.xlsx')
     mse_mean_bl.append(mean)
     mse_conf_bl.append(conf)
     #else:
@@ -131,15 +131,15 @@ for i in range(len(save)):
       #  mse_mean_bl.append(mean)
        # mse_conf_bl.append(conf)
 
-    mean, conf = data_val('../Test/MultiPSO/Explore100Exploit200/ALLCONError_' + str(save[i]) + '.xlsx')
+    mean, conf = data_val('../Test/MultiPSO/4Vehicles/Explore100Exploit200/ALLCONError_' + str(save[i]) + '.xlsx')
     mse_mean_bg.append(mean)
     mse_conf_bg.append(conf)
 
-    mean, conf = data_val('../Test/MultiPSO/Explore150Exploit200/ALLCONError_' + str(save[i]) + '.xlsx')
+    mean, conf = data_val('../Test/MultiPSO/4Vehicles/Explore150Exploit200/ALLCONError_' + str(save[i]) + '.xlsx')
     mse_mean_un.append(mean)
     mse_conf_un.append(conf)
 
-    mean, conf = data_val('../Test/MultiPSO/No_exploitation/ALLCONError_' + str(save[i]) + '.xlsx')
+    mean, conf = data_val('../Test/MultiPSO/4Vehicles/No_exploitation/ALLCONError_' + str(save[i]) + '.xlsx')
     mse_mean_con.append(mean)
     mse_conf_con.append(conf)
 

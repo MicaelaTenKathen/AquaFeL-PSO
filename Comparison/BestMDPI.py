@@ -47,9 +47,9 @@ df_bounds: data of the limits of the surface where the drone can travel
 # Variables initialization
 
 
-action = np.array([3.6845, 1.5614, 0, 3.1262]) # Syracuse (Exploitation)
+#action = np.array([3.6845, 1.5614, 0, 3.1262]) # Syracuse (Exploitation)
 #action = np.array([2.0187, 0, 3.2697, 0]) #Rome (Exploration)
-#action = np.array([2, 2, 0, 0])
+action = np.array([2, 2, 0, 0])
 
 initial_position = np.array([[0, 0],
                              [8, 56],
@@ -69,9 +69,9 @@ vehicles = 4
 stage = 'exploration'
 #stage = 'no_exploitation'
 method = 0
-pso = PSOEnvironment(resolution, ys, method, initial_seed=1000000, initial_position=initial_position, vehicles=vehicles,
+pso = PSOEnvironment(resolution, ys, method, initial_seed=1000009, initial_position=initial_position, vehicles=vehicles,
                      exploration_distance=100, exploitation_distance=200, reward_function='inc_mse',
-                     type_error='all_map', stage=stage, final_model='centralized')
+                     type_error='all_map', stage=stage, final_model='federated')
 
 # Gaussian process initialization
 
@@ -82,7 +82,7 @@ import matplotlib.pyplot as plt
 error_vec = []
 last_error = []
 
-for i in range(10):
+for i in range(1):
     time_init = time.time()
     done = False
     state = pso.reset()
@@ -106,14 +106,15 @@ for i in range(10):
     centers_bench, dict_limits_bench, dict_coord = pso.return_bench()
     #plot.gaussian(mu, sigma, part_ant)
     #plot.movement_exploration(mu, sigma, part_ant_explore)
-    #plot.movement_exploration(mu, sigma, part_ant)
+    #plot.movement_exploration(final_mu, final_sigma, part_ant)
     #plot.benchmark()
-    #plot.detection_areas(mu, sigma)
+    plot.detection_areas(mu, sigma)
+    #plot.mean_map(mu, sigma)
     #plot.mu_exploitation(dict_mu, dict_sigma, centers)
     #distances = pso.distances_data()
     #plot.movement_exploitation(vehicles, dict_mu, dict_sigma, centers, dict_centers, part_ant_exploit, assig_center)
-    #plot.plot_classic(final_mu, final_sigma, part_ant)
-    #plot.zoom_action_zone(centers_bench, dict_limits_bench, mu, sigma, final_mu, final_sigma)
+    plot.plot_classic(final_mu, final_sigma, part_ant)
+    plot.zoom_action_zone(centers_bench, dict_limits_bench, mu, sigma, final_mu, final_sigma)
     #print(centers_bench, dict_limits_bench, dict_coord)
 
     # if i == 0:
